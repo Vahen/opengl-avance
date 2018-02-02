@@ -29,6 +29,7 @@ class Application{
         const std::string m_AppName;
         const std::string m_ImGuiIniFilename;
         const glmlv::fs::path m_ShadersRootPath;
+        const glmlv::fs::path m_AssetsRootPath;
 
         GLuint m_sphereVBO = 0;
         GLuint m_sphereIBO = 0;
@@ -54,11 +55,17 @@ class Application{
         GLuint uDirectionalLightIntensity;
 
         GLuint uKd;
+        
+        GLuint uTexture;
 
         Light pointLight;
         Light dirLight;
 
         vec3 coloruKd;
+
+
+        GLuint textures[2];
+        int ind_texture_cube = 0;
 
         ViewController viewController{m_GLFWHandle.window()};
 

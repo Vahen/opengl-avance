@@ -11,12 +11,18 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/io.hpp>
 #include <glm/gtc/random.hpp>
+#include <glmlv/Image2DRGBA.hpp>
 
 using namespace glmlv;
 using namespace glm;
+using namespace std;
 
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
+    float diffuseColor[3] = {1, 1, 1};
+    float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
+    float dirLightposition[3] = {dirLight.position.x/255.f, dirLight.position.y/255.f, dirLight.position.z/255.f};
+    //float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
     // Loop until the user closes the window
     m_program.use();
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
@@ -39,8 +45,20 @@ int Application::run() {
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                         ImGui::GetIO().Framerate);
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
-            if (ImGui::ColorEdit3("clearColor", clearColor)) {
+            if (ImGui::ColorEdit3("BackgroundColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
+            }
+            
+            if (ImGui::ColorEdit3("pointLightPos", pointLightposition)) {
+                pointLight.position = vec3(pointLightposition[0],pointLightposition[1],pointLightposition[2]);
+            }
+
+            if (ImGui::ColorEdit3("dirLightPos", dirLightposition)) {
+                dirLight.position = vec3(dirLightposition[0],dirLightposition[1],dirLightposition[2]);
+            }
+            
+            if (ImGui::ColorEdit3("diffuseColor", diffuseColor)) {
+                coloruKd = vec3(diffuseColor[0],diffuseColor[1],diffuseColor[2]);
             }
 
 
@@ -70,7 +88,9 @@ Application::Application(int argc, char **argv) :
         m_AppPath{glmlv::fs::path{argv[0]}},
         m_AppName{m_AppPath.stem().string()},
         m_ImGuiIniFilename{m_AppName + ".imgui.ini"},
-        m_ShadersRootPath{m_AppPath.parent_path() / "shaders"} {
+        m_ShadersRootPath{m_AppPath.parent_path() / "shaders"},
+        m_AssetsRootPath{ m_AppPath.parent_path() / "assets" }
+        {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
 
     glEnable(GL_DEPTH_TEST);
@@ -78,6 +98,7 @@ Application::Application(int argc, char **argv) :
     // Here we load and compile shaders from the library
     m_program = glmlv::compileProgram({m_ShadersRootPath / "forwardRenderer" / "forward.vs.glsl",
                                        m_ShadersRootPath / "forwardRenderer" / "forward.fs.glsl"});
+    m_program.use();
     setUniformLocations();
     
     pointLight.position = vec3(1.f,10.f,1.f);
@@ -87,6 +108,9 @@ Application::Application(int argc, char **argv) :
     dirLight.intensity = vec3(5.f,5.f,5.f);
 
     coloruKd = vec3(1.f,1.f,1.f);
+
+
+    glGenTextures(2,textures);
 
     createSphere();
     createCube();
@@ -105,6 +129,8 @@ void Application::setUniformLocations(){
     uDirectionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
 
     uKd = glGetUniformLocation(m_program.glId(), "uKd");
+
+    uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
 }
 
 Application::~Application() {
@@ -144,7 +170,7 @@ void Application::destroyCube() {
 }
 
 void Application::createSphere() {
-    sphere = makeSphere(10);
+    sphere = makeSphere(5);
 
     glGenBuffers(1, &m_sphereVBO);
 
@@ -167,6 +193,7 @@ void Application::createSphere() {
     // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
     const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
     const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
+    const GLint uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
     // const GLint colorAttrLocation = glGetAttribLocation(m_program.glId(), "aColor");
 
     glGenVertexArrays(1, &m_sphereVAO);
@@ -229,6 +256,24 @@ void Application::createCube() {
     // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
     const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
     const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
+    const GLint texCoordAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
+    
+    auto textureImg = readImage(m_AssetsRootPath / m_AppName / "textures" / "opengl-logo.png");
+    glUniform1i(uTexture,ind_texture_cube);
+
+    cout << textures[ind_texture_cube] << endl;
+    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);// Bind sur GL_TEXTURE_2D
+    // Met les info de l'image dans GL_TEXTURE_2D
+    cout << "deb" << endl;
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, textureImg.width(), textureImg.height());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE, textureImg.data());
+ 
+    cout << "fin" << endl;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
+    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
 
     glGenVertexArrays(1, &m_cubeVAO);
 
@@ -250,6 +295,13 @@ void Application::createCube() {
                           (const GLvoid *) offsetof(Vertex3f3f2f, normal)
     );
 
+    glEnableVertexAttribArray(texCoordAttrLocation);
+    glVertexAttribPointer(texCoordAttrLocation, 2,
+                          GL_FLOAT, GL_FALSE,
+                          sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords)
+    );
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cubeIBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -260,15 +312,24 @@ void Application::createCube() {
 void Application::drawCube() {
     glm::mat4 projMatrix = glm::perspective(glm::radians(70.f), (float) (m_nWindowWidth) / m_nWindowHeight, 0.1f,
                                             100.f);
-    //glm::mat4 viewMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -5.f));
-    
     glm::mat4 viewMatrix = viewController.getViewMatrix();
-    glm::mat4 cubeMVMatrix = glm::translate(viewMatrix,vec3(0.f,10.f,0.f));
+    glm::mat4 cubeMVMatrix = glm::translate(viewMatrix,vec3(0.f,1.f,0.f));
+
     glBindVertexArray(m_cubeVAO);
+
     glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(cubeMVMatrix));
     glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(cubeMVMatrix))));
     glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * cubeMVMatrix));
+
+    glUniform1i(uTexture, ind_texture_cube);
+    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
+    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
+
     glDrawElements(GL_TRIANGLES, cube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
+
+    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glBindVertexArray(0);
 }
 
@@ -288,12 +349,21 @@ void Application::drawSphere() {
 }
 
 void Application::drawScene(){
-    glUniform3f(uPointLightPosition,pointLight.position.x,pointLight.position.y,pointLight.position.z);
-    glUniform3f(uPointLightIntensity,pointLight.intensity.x,pointLight.intensity.y,pointLight.intensity.z);
-    glUniform3f(uDirectionalLightDir,dirLight.position.x,dirLight.position.y,dirLight.position.z);
-    glUniform3f(uDirectionalLightIntensity,dirLight.intensity.x,dirLight.intensity.y,dirLight.intensity.z);
+    
+    vec3 pointLightPos_vs = vec3(viewController.getViewMatrix() * vec4(pointLight.position,1));
+    glUniform3f(uPointLightPosition,pointLightPos_vs.x,pointLightPos_vs.y,pointLightPos_vs.z);
+    
+    vec3 pointLightInt_vs = vec3(viewController.getViewMatrix() * vec4(pointLight.intensity,1));
+    glUniform3f(uPointLightIntensity,pointLightInt_vs.x,pointLightInt_vs.y,pointLightInt_vs.z);
+    
+    vec3 dirLightPos_vs = vec3(viewController.getViewMatrix() * vec4(dirLight.position,1)); 
+    glUniform3f(uDirectionalLightDir,dirLightPos_vs.x,dirLightPos_vs.y,dirLightPos_vs.z);
+    
+    vec3 dirLightInt_vs = vec3(viewController.getViewMatrix() * vec4(dirLight.intensity,1));
+    glUniform3f(uDirectionalLightIntensity,dirLightInt_vs.x,dirLightInt_vs.y,dirLightInt_vs.z);
+    
     glUniform3f(uKd,coloruKd.x,coloruKd.y,coloruKd.z);
-
+    
     drawCube();
     drawSphere();
 }

@@ -15,14 +15,15 @@ uniform vec3 uKd;
 
 out vec3 fColor;
 
-uniform sampler2D uSampler;
+uniform sampler2D uTexture;
 
 void main(){
 	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
 
 	vec3 dirToPointLight = (uPointLightPosition - vViewSpacePosition) / distToPointLight;
 
-	fColor = uKd * (uDirectionalLightIntensity * max(0.0, dot(vViewSpaceNormal, uDirectionalLightDir)) + uPointLightIntensity * max(0.0, dot(vViewSpaceNormal, dirToPointLight)) / (distToPointLight * distToPointLight));
+
+	fColor = texture(uTexture, vTexCoords).xyz + uKd * (uDirectionalLightIntensity * max(0.0, dot(vViewSpaceNormal, uDirectionalLightDir)) + uPointLightIntensity * max(0.0, dot(vViewSpaceNormal, dirToPointLight)) / (distToPointLight * distToPointLight));
 	
 
    //fColor = normalize(vViewSpaceNormal);
