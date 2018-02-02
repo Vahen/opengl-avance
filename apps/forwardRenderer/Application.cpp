@@ -44,7 +44,7 @@ int Application::run() {
             ImGui::Begin("GUI");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                         ImGui::GetIO().Framerate);
-            ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
+            ImGui::SetColorEditOptions(ImGuiColorEditFlags_RGB);//ColorEditMode(ImGuiColorEditMode_RGB);
             if (ImGui::ColorEdit3("BackgroundColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
@@ -191,9 +191,8 @@ void Application::createSphere() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
-    const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
+    GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
     const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
-    const GLint uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
     // const GLint colorAttrLocation = glGetAttribLocation(m_program.glId(), "aColor");
 
     glGenVertexArrays(1, &m_sphereVAO);

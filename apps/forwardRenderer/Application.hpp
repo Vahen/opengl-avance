@@ -44,19 +44,19 @@ class Application{
 
         glmlv::GLProgram m_program;
 
-        GLuint uModelViewMatrix;
-        GLuint uModelViewProjMatrix;
-        GLuint uNormalMatrix;
+        GLint uModelViewMatrix;
+        GLint uModelViewProjMatrix;
+        GLint uNormalMatrix;
 
-        GLuint uPointLightPosition;
-        GLuint uPointLightIntensity;
+        GLint uPointLightPosition;
+        GLint uPointLightIntensity;
 
-        GLuint uDirectionalLightDir;
-        GLuint uDirectionalLightIntensity;
+        GLint uDirectionalLightDir;
+        GLint uDirectionalLightIntensity;
 
-        GLuint uKd;
+        GLint uKd;
         
-        GLuint uTexture;
+        GLint uTexture;
 
         Light pointLight;
         Light dirLight;

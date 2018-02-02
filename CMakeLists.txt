@@ -18,7 +18,7 @@ if (GLMLV_USE_BOOST_FILESYSTEM)
     )
 endif()
 
-set(IMGUI_DIR imgui-1.49)
+set(IMGUI_DIR imgui-1.53)
 set(GLFW_DIR glfw-3.2.1)
 set(GLM_DIR glm-0.9.8.3)
 set(GLAD_DIR glad)
