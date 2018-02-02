@@ -7,47 +7,68 @@
 #include <glmlv/ViewController.hpp>
 
 using namespace glmlv;
+using namespace glm;
 
-class Application
-{
-public:
-    Application(int argc, char** argv);
-    ~Application();
-    int run();
-private:
-    const size_t m_nWindowWidth = 1280;
-    const size_t m_nWindowHeight = 720;
-    glmlv::GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
+struct Light{
+    vec3 position;
+    vec3 intensity;    
+};
 
-    const glmlv::fs::path m_AppPath;
-    const std::string m_AppName;
-    const std::string m_ImGuiIniFilename;
-    const glmlv::fs::path m_ShadersRootPath;
 
-    GLuint m_sphereVBO = 0;
-    GLuint m_sphereIBO = 0;
-    GLuint m_sphereVAO = 0;
+class Application{
+    public:
+        Application(int argc, char** argv);
+        ~Application();
+        int run();
+    private:
+        const int m_nWindowWidth = 1280;
+        const int m_nWindowHeight = 720;
+        glmlv::GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
 
-    GLuint m_cubeVBO = 0;
-    GLuint m_cubeIBO = 0;
-    GLuint m_cubeVAO = 0;
+        const glmlv::fs::path m_AppPath;
+        const std::string m_AppName;
+        const std::string m_ImGuiIniFilename;
+        const glmlv::fs::path m_ShadersRootPath;
 
-    SimpleGeometry sphere;
-    SimpleGeometry cube;
+        GLuint m_sphereVBO = 0;
+        GLuint m_sphereIBO = 0;
+        GLuint m_sphereVAO = 0;
 
-    glmlv::GLProgram m_program;
+        GLuint m_cubeVBO = 0;
+        GLuint m_cubeIBO = 0;
+        GLuint m_cubeVAO = 0;
 
-    GLint uModelViewMatrix;
-    GLint uModelViewProjMatrix;
-    GLint uNormalMatrix;
+        SimpleGeometry sphere;
+        SimpleGeometry cube;
 
-    ViewController viewController{m_GLFWHandle.window()};
+        glmlv::GLProgram m_program;
 
-    void createCube();
-    void createSphere();
-    void destroyCube();
-    void destroySphere();
+        GLuint uModelViewMatrix;
+        GLuint uModelViewProjMatrix;
+        GLuint uNormalMatrix;
 
-    void drawSphere();
-    void drawCube();
+        GLuint uPointLightPosition;
+        GLuint uPointLightIntensity;
+
+        GLuint uDirectionalLightDir;
+        GLuint uDirectionalLightIntensity;
+
+        GLuint uKd;
+
+        Light pointLight;
+        Light dirLight;
+
+        vec3 coloruKd;
+
+        ViewController viewController{m_GLFWHandle.window()};
+
+        void setUniformLocations();
+        void createCube();
+        void createSphere();
+        void destroyCube();
+        void destroySphere();
+
+        void drawSphere();
+        void drawCube();
+        void drawScene();
 };
