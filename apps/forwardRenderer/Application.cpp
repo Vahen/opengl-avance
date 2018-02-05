@@ -20,8 +20,9 @@ using namespace std;
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
     float diffuseColor[3] = {1, 1, 1};
-    float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
-    float dirLightposition[3] = {dirLight.position.x/255.f, dirLight.position.y/255.f, dirLight.position.z/255.f};
+    float pointLightposition[3] = {pointLight.position.x / 255.f, pointLight.position.y / 255.f,
+                                   pointLight.position.z / 255.f};
+    float dirLightposition[3] = {dirLight.position.x / 255.f, dirLight.position.y / 255.f, dirLight.position.z / 255.f};
     //float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
     // Loop until the user closes the window
     m_program.use();
@@ -31,11 +32,7 @@ int Application::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Put here rendering code
-        //
-        //
-        //
         drawScene();
-        
 
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
@@ -48,19 +45,14 @@ int Application::run() {
             if (ImGui::ColorEdit3("BackgroundColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
-            
+
             if (ImGui::ColorEdit3("pointLightPos", pointLightposition)) {
-                pointLight.position = vec3(pointLightposition[0],pointLightposition[1],pointLightposition[2]);
+                pointLight.position = vec3(pointLightposition[0], pointLightposition[1], pointLightposition[2]);
             }
 
             if (ImGui::ColorEdit3("dirLightPos", dirLightposition)) {
-                dirLight.position = vec3(dirLightposition[0],dirLightposition[1],dirLightposition[2]);
+                dirLight.position = vec3(dirLightposition[0], dirLightposition[1], dirLightposition[2]);
             }
-            
-            if (ImGui::ColorEdit3("diffuseColor", diffuseColor)) {
-                coloruKd = vec3(diffuseColor[0],diffuseColor[1],diffuseColor[2]);
-            }
-
 
             ImGui::End();
         }
@@ -89,8 +81,7 @@ Application::Application(int argc, char **argv) :
         m_AppName{m_AppPath.stem().string()},
         m_ImGuiIniFilename{m_AppName + ".imgui.ini"},
         m_ShadersRootPath{m_AppPath.parent_path() / "shaders"},
-        m_AssetsRootPath{ m_AppPath.parent_path() / "assets" }
-        {
+        m_AssetsRootPath{m_AppPath.parent_path() / "assets"} {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
 
     glEnable(GL_DEPTH_TEST);
@@ -101,14 +92,14 @@ Application::Application(int argc, char **argv) :
     m_program.use();
 
     setUniformLocations();
-    
-    pointLight.position = vec3(0.f,1.f,0.f);
-    pointLight.intensity = vec3(1E4,0,1E4);
 
-    dirLight.position = vec3(1.f,1.f,1.f);
-    dirLight.intensity = vec3(1.f,1.f,1.f);
+    pointLight.position = vec3(0.f, 1.f, 0.f);
+    pointLight.intensity = vec3(1E4, 0, 1E4);
 
-    coloruKd = vec3(1.f,1.f,1.f);
+    dirLight.position = vec3(1.f, 1.f, 1.f);
+    dirLight.intensity = vec3(1.f, 1.f, 1.f);
+
+    coloruKd = vec3(1.f, 1.f, 1.f);
 
     //glGenTextures(2,textures);
 
@@ -117,7 +108,7 @@ Application::Application(int argc, char **argv) :
 
 }
 
-void Application::setUniformLocations(){
+void Application::setUniformLocations() {
     uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
@@ -267,15 +258,16 @@ void Application::createCube() {
     const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
     const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
     const GLint texCoordAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
-    
+
     auto textureImg = readImage(m_AssetsRootPath / m_AppName / "textures" / "opengl-logo.png");
-    glUniform1i(uKaTexture,ind_texture_cube);
+    glUniform1i(uKaTexture, ind_texture_cube);
 
     glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);// Bind sur GL_TEXTURE_2D
     // Met les info de l'image dans GL_TEXTURE_2D
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, textureImg.width(), textureImg.height());
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE, textureImg.data());
- 
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE,
+                    textureImg.data());
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -320,7 +312,7 @@ void Application::drawCube() {
     glm::mat4 projMatrix = glm::perspective(glm::radians(70.f), (float) (m_nWindowWidth) / m_nWindowHeight, 0.1f,
                                             100.f);
     glm::mat4 viewMatrix = viewController.getViewMatrix();
-    glm::mat4 cubeMVMatrix = glm::translate(viewMatrix,vec3(0.f,1.f,0.f));
+    glm::mat4 cubeMVMatrix = glm::translate(viewMatrix, vec3(0.f, 1.f, 0.f));
 
     glBindVertexArray(m_cubeVAO);
 
@@ -342,7 +334,7 @@ void Application::drawCube() {
 
 void Application::drawSphere() {
     //glm::mat4 viewMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -5.f));
-    
+
     glm::mat4 viewMatrix = viewController.getViewMatrix();
     glm::mat4 sphereMVMatrix = viewMatrix;
     glBindVertexArray(m_sphereVAO); // bind
@@ -353,18 +345,18 @@ void Application::drawSphere() {
     glBindVertexArray(0);
 }
 
-void Application::drawScene(){
+void Application::drawScene() {
     const auto viewMatrix = viewController.getViewMatrix();
     // todo
-    vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position,1));
-    glUniform3f(uPointLightPosition,pointLightPos_vs.x,pointLightPos_vs.y,pointLightPos_vs.z);
+    vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position, 1));
+    glUniform3f(uPointLightPosition, pointLightPos_vs.x, pointLightPos_vs.y, pointLightPos_vs.z);
 
-    vec3 dirLightPos_vs = vec3(viewMatrix * vec4(dirLight.position,0)); 
-    glUniform3f(uDirectionalLightDir,dirLightPos_vs.x,dirLightPos_vs.y,dirLightPos_vs.z);
+    vec3 dirLightPos_vs = vec3(viewMatrix * vec4(dirLight.position, 0));
+    glUniform3f(uDirectionalLightDir, dirLightPos_vs.x, dirLightPos_vs.y, dirLightPos_vs.z);
 
-    glUniform3f(uPointLightIntensity,pointLight.intensity.x,pointLight.intensity.y,pointLight.intensity.z);
-    glUniform3f(uDirectionalLightIntensity,dirLight.intensity.x,dirLight.intensity.y,dirLight.intensity.z);
-    
+    glUniform3f(uPointLightIntensity, pointLight.intensity.x, pointLight.intensity.y, pointLight.intensity.z);
+    glUniform3f(uDirectionalLightIntensity, dirLight.intensity.x, dirLight.intensity.y, dirLight.intensity.z);
+
     const auto modelMatrix = glm::mat4(1);
 
     const auto mvMatrix = viewMatrix * modelMatrix;
@@ -376,18 +368,18 @@ void Application::drawScene(){
     glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
     glBindVertexArray(m_SceneVAO);
-    uint32_t offset=0;
-    
-    glUniform1i(uKaTexture,0);
-    glUniform1i(uKsTexture,1);
-    glUniform1i(uKdTexture,2);
-    glUniform1i(uSnTexture,3);
-    
-    for (int i=0;i<data.shapeCount;++i){
+    uint32_t offset = 0;
+
+    glUniform1i(uKaTexture, 0);
+    glUniform1i(uKsTexture, 1);
+    glUniform1i(uKdTexture, 2);
+    glUniform1i(uSnTexture, 3);
+
+    for (int i = 0; i < data.shapeCount; ++i) {
 
         // todo -> add materiaux
         auto materialId = data.materialIDPerShape[i];
-        const auto& material = data.materials[materialId];
+        const auto &material = data.materials[materialId];
 
         glUniform3fv(uKaLocation, 1, glm::value_ptr(material.Ka));
         glUniform3fv(uKdLocation, 1, glm::value_ptr(material.Kd));
@@ -395,27 +387,26 @@ void Application::drawScene(){
         glUniform1fv(uShininessLocation, 1, &material.shininess);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,(material.KaTextureId<0)?0:textureIds[material.KaTextureId]);
+        glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : textureIds[material.KaTextureId]);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,(material.KsTextureId<0)?0:textureIds[material.KsTextureId]);
+        glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : textureIds[material.KsTextureId]);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D,(material.KdTextureId<0)?0:textureIds[material.KdTextureId]);
+        glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : textureIds[material.KdTextureId]);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D,(material.shininessTextureId<0)?0:textureIds[material.shininessTextureId]);
-
+        glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
 
 
         int val = data.indexCountPerShape[i];
-        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid*) (offset * sizeof(GLuint)));
-        offset+=val;
+        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
+        offset += val;
     }
     //drawCube();
     //drawSphere();
 
-    
+
 }
 
-void Application::initScene(){
+void Application::initScene() {
 
     //createSphere();
     //createCube();
@@ -446,10 +437,11 @@ void Application::initScene(){
 
     textureIds.resize(data.textures.size());
     glGenTextures(data.textures.size(), textureIds.data());
-    for (auto i=0;i<textureIds.size();i++){
+    for (auto i = 0; i < textureIds.size(); i++) {
         glBindTexture(GL_TEXTURE_2D, textureIds[i]);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA, GL_UNSIGNED_BYTE, data.textures[i].data());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
+                        GL_UNSIGNED_BYTE, data.textures[i].data());
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -464,23 +456,27 @@ void Application::initScene(){
     glEnableVertexAttribArray(normalAttrLocation);
     glEnableVertexAttribArray(texCoordsAttrLocation);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO); 
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
 
-    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, position));
-    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, normal));
-    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, texCoords));
+    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, position));
+    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, normal));
+    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords));
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO); 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO);
 
     glBindVertexArray(0);
 
     m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
-    viewController.setSpeed(m_SceneSize * 0.1f); 
+    viewController.setSpeed(m_SceneSize * 0.1f);
 
     const auto viewportSize = m_GLFWHandle.framebufferSize();
-    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize, m_SceneSize); // near = 1% de la taille de la scene, far = 100%
+    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize,
+                                  m_SceneSize); // near = 1% de la taille de la scene, far = 100%
 
 }
 

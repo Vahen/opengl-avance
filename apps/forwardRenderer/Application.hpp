@@ -55,12 +55,12 @@ class Application{
         GLuint uDirectionalLightDir;
         GLuint uDirectionalLightIntensity;
 
-        //GLuint uKd;
+        GLuint uKd;
         
         Light pointLight;
         Light dirLight;
 
-        //vec3 coloruKd;
+        vec3 coloruKd;
 
 
         GLuint textures[2];

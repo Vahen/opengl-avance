@@ -61,7 +61,7 @@ void main(){
 	vec3 colorPoint = blinnPhong(wipoint)*(uPointLightIntensity / (d*d));
 
 	fColor = texture(uKaTexture, vTexCoords).xyz+ colorDir+ colorPoint;
-	fColor = colorPoint;
+	//fColor = colorPoint;
 
 
 	//fColor = normalize(vViewSpaceNormal);
