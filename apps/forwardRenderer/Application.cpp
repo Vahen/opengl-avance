@@ -165,7 +165,7 @@ void Application::bindDataOnVAO() const {
     glBindVertexArray(0);
 }
 
-void Application::generateAndBindAllTexture() const {
+void Application::generateAndBindAllTexture() {
     textureIds.resize(data.textures.size());
     glGenTextures(data.textures.size(), textureIds.data());
     for (auto i = 0; i < textureIds.size(); i++) {

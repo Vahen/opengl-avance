@@ -121,7 +121,7 @@ class Application{
 
     void createWhiteTexture() const;
 
-    void generateAndBindAllTexture() const;
+    void generateAndBindAllTexture() ;
 
     void bindDataOnVAO() const;
 };
