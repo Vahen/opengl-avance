@@ -45,15 +45,15 @@ class Application{
 
         GLProgram m_program;
 
-        GLuint uModelViewMatrix;
-        GLuint uModelViewProjMatrix;
-        GLuint uNormalMatrix;
+        GLuint uModelViewMatrixLocation;
+        GLuint uModelViewProjMatrixLocation;
+        GLuint uNormalMatrixLocation;
 
-        GLuint uPointLightPosition;
-        GLuint uPointLightIntensity;
+        GLuint uPointLightPositionLocation;
+        GLuint uPointLightIntensityLocation;
 
-        GLuint uDirectionalLightDir;
-        GLuint uDirectionalLightIntensity;
+        GLuint uDirectionalLightDirLocation;
+        GLuint uDirectionalLightIntensityLocation;
 
         GLuint uKd;
         
@@ -112,4 +112,16 @@ class Application{
     void drawLights(const mat4 &viewMatrix) const;
 
     void destroyScene();
+
+    void initLights();
+
+    void fillSceneVBO() const;
+
+    void fillSceneIBO() const;
+
+    void createWhiteTexture() const;
+
+    void generateAndBindAllTexture() const;
+
+    void bindDataOnVAO() const;
 };
