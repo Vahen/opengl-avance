@@ -129,9 +129,9 @@ private:
 
     void fillSceneIBO() const;
 
-    void createWhiteTexture() const;
+    void createWhiteTexture() ;
 
     void generateAndBindAllTexture();
 
-    void bindDataOnVAO() const;
+    void bindDataOnVAO() ;
 };

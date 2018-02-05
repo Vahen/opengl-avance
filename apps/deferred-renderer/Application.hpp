@@ -88,6 +88,8 @@ private:
     ///////////////////////////////////////////////
 
     GLuint m_GBufferTextures[GBufferTextureCount];
+
+    GLuint m_FBO;
     ///////////////////////////////////////////////
 
     void setUniformLocations();
@@ -108,9 +110,9 @@ private:
 
     void fillSceneIBO() const;
 
-    void createWhiteTexture() const;
+    void createWhiteTexture() ;
 
     void generateAndBindAllTexture();
 
-    void bindDataOnVAO() const;
+    void bindDataOnVAO() ;
 };

@@ -85,8 +85,8 @@ Application::Application(int argc, char **argv) :
     glEnable(GL_DEPTH_TEST);
 
     // Here we load and compile shaders from the library
-    m_program = glmlv::compileProgram({m_ShadersRootPath / "forwardRenderer" / "forward.vs.glsl",
-                                       m_ShadersRootPath / "forwardRenderer" / "forward.fs.glsl"});
+    m_program = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "forward.vs.glsl",
+                                       m_ShadersRootPath / m_AppName / "forward.fs.glsl"});
     m_program.use();
 
     setUniformLocations();
@@ -137,7 +137,7 @@ void Application::initScene() {
 
 }
 
-void Application::bindDataOnVAO() const {
+void Application::bindDataOnVAO() {
     glGenVertexArrays(1, &m_SceneVAO);
     glBindVertexArray(m_SceneVAO);
 
@@ -177,7 +177,7 @@ void Application::generateAndBindAllTexture() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::createWhiteTexture() const {
+void Application::createWhiteTexture(){
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);

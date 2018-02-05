@@ -29,9 +29,13 @@ int Application::run() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
         // Put here rendering code
+        //
+        //
         drawScene();
 
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -51,6 +55,12 @@ int Application::run() {
             if (ImGui::InputFloat3("dirLightPos", dirLightposition)) {
                 dirLight.position = vec3(dirLightposition[0], dirLightposition[1], dirLightposition[2]);
             }
+
+//            ImGui::RadioButton("Albedo");
+//            ImGui::RadioButton("Normal");
+//            ImGui::RadioButton("Depth");
+//            ImGui::RadioButton("Specular");
+//            ImGui::RadioButton("Shadow");
 
             ImGui::End();
         }
@@ -85,22 +95,63 @@ Application::Application(int argc, char **argv) :
     glEnable(GL_DEPTH_TEST);
 
     // Here we load and compile shaders from the library
-    m_program = glmlv::compileProgram({m_ShadersRootPath / "forwardRenderer" / "forward.vs.glsl",
-                                       m_ShadersRootPath / "forwardRenderer" / "forward.fs.glsl"});
+    m_program = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
+                                       m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
     m_program.use();
 
     setUniformLocations();
 
-    const GLenum m_GBufferTextureFormat[GBufferTextureCount] = { GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F };
+    const GLenum m_GBufferTextureFormat[GBufferTextureCount] = {GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F,
+                                                                GL_DEPTH_COMPONENT32F};
+    glGenTextures(GBufferTextureCount, m_GBufferTextures);
 
-    glGenTextures(GBufferTextureCount,m_GBufferTextures);
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GPosition]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GPosition], m_nWindowWidth, m_nWindowHeight);
 
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GNormal]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GNormal], m_nWindowWidth, m_nWindowHeight);
 
-    pointLight.position = vec3(0.f, 1.f, 0.f);
-    pointLight.intensity = vec3(1E5, 0, 1E5);
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GAmbient]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GAmbient], m_nWindowWidth, m_nWindowHeight);
 
-    dirLight.position = vec3(1.f, 1.f, 1.f);
-    dirLight.intensity = vec3(1.f, 1.f, 1.f);
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDiffuse]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDiffuse], m_nWindowWidth, m_nWindowHeight);
+
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GGlossyShininess]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GGlossyShininess], m_nWindowWidth, m_nWindowHeight);
+
+    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDepth]);
+    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDepth], m_nWindowWidth, m_nWindowHeight);
+
+    glGenFramebuffers(1, &m_FBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GPosition, GL_TEXTURE_2D,
+                           m_GBufferTextures[GPosition], 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GNormal, GL_TEXTURE_2D,
+                           m_GBufferTextures[GNormal], 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GAmbient,
+                           GL_TEXTURE_2D, m_GBufferTextures[GAmbient], 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GDiffuse,
+                           GL_TEXTURE_2D, m_GBufferTextures[GDiffuse], 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GGlossyShininess, GL_TEXTURE_2D,
+                           m_GBufferTextures[GGlossyShininess], 0);
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBufferTextures[GDepth], 0);
+
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
+                            GL_COLOR_ATTACHMENT4};
+    glDrawBuffers(5, drawBuffers);
+
+    // Securité
+    glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
+    ////////
 
     initScene();
 
@@ -146,7 +197,7 @@ void Application::initScene() {
 
 }
 
-void Application::bindDataOnVAO() const {
+void Application::bindDataOnVAO() {
     glGenVertexArrays(1, &m_SceneVAO);
     glBindVertexArray(m_SceneVAO);
 
@@ -186,7 +237,7 @@ void Application::generateAndBindAllTexture() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::createWhiteTexture() const {
+void Application::createWhiteTexture() {
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
