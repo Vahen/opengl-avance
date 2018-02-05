@@ -97,8 +97,6 @@ Application::Application(int argc, char **argv) :
     dirLight.position = vec3(1.f, 1.f, 1.f);
     dirLight.intensity = vec3(1.f, 1.f, 1.f);
 
-    coloruKd = vec3(1.f, 1.f, 1.f);
-
     initScene();
 
 }
@@ -238,10 +236,6 @@ void Application::drawScene() {
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
         offset += val;
     }
-    //drawCube();
-    //drawSphere();
-
-
 }
 
 void Application::drawLights(const mat4 &viewMatrix) const {
@@ -272,217 +266,13 @@ void Application::setMaterial(const ObjData::PhongMaterial &material) const {
 }
 
 
-void Application::createSphere() {
-    sphere = makeSphere(5);
-
-    glGenBuffers(1, &m_sphereVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_sphereVBO);
-
-    glBufferStorage(GL_ARRAY_BUFFER, sphere.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f),
-                    sphere.vertexBuffer.data(), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenBuffers(1, &m_sphereIBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_sphereIBO);
-
-    glBufferStorage(GL_ARRAY_BUFFER, sphere.indexBuffer.size() * sizeof(sphere.indexBuffer[0]),
-                    sphere.indexBuffer.data(), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
-    const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
-    const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
-    const GLint uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
-    // const GLint colorAttrLocation = glGetAttribLocation(m_program.glId(), "aColor");
-
-    glGenVertexArrays(1, &m_sphereVAO);
-
-    glBindVertexArray(m_sphereVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_sphereVBO);
-
-    glEnableVertexAttribArray(positionAttrLocation);
-    glVertexAttribPointer(positionAttrLocation,
-                          3,
-                          GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, position)
-    );
-
-    glEnableVertexAttribArray(normalAttrLocation);
-    glVertexAttribPointer(normalAttrLocation,
-                          3,
-                          GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, normal)
-    );
-
-    // glEnableVertexAttribArray(colorAttrLocation);
-    // glVertexAttribPointer(colorAttrLocation,
-    //                         3,
-    //                         GL_FLOAT, GL_FALSE,
-    //                         sizeof(Vertex3f3f2f),
-    //                         (const GLvoid*) offsetof(Vertex3f3f2f, color)
-    //                     );
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_sphereIBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
-}
-
-void Application::createCube() {
-    cube = makeCube();
-
-    glGenBuffers(1, &m_cubeVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_cubeVBO);
-
-    glBufferStorage(GL_ARRAY_BUFFER, cube.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), cube.vertexBuffer.data(),
-                    0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenBuffers(1, &m_cubeIBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_cubeIBO);
-
-    glBufferStorage(GL_ARRAY_BUFFER, cube.indexBuffer.size() * sizeof(cube.indexBuffer[0]), cube.indexBuffer.data(), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
-    const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
-    const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
-    const GLint texCoordAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
-
-    auto textureImg = readImage(m_AssetsRootPath / m_AppName / "textures" / "opengl-logo.png");
-    glUniform1i(uKaTexture, ind_texture_cube);
-
-    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);// Bind sur GL_TEXTURE_2D
-    // Met les info de l'image dans GL_TEXTURE_2D
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, textureImg.width(), textureImg.height());
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE,
-                    textureImg.data());
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
-    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
-
-    glGenVertexArrays(1, &m_cubeVAO);
-
-    glBindVertexArray(m_cubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_cubeVBO);
-
-    glEnableVertexAttribArray(positionAttrLocation);
-    glVertexAttribPointer(positionAttrLocation, 3,
-                          GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, position)
-    );
-
-    glEnableVertexAttribArray(normalAttrLocation);
-    glVertexAttribPointer(normalAttrLocation, 3,
-                          GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, normal)
-    );
-
-    glEnableVertexAttribArray(texCoordAttrLocation);
-    glVertexAttribPointer(texCoordAttrLocation, 2,
-                          GL_FLOAT, GL_FALSE,
-                          sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords)
-    );
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cubeIBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
-}
-
-void Application::drawCube() {
-    glm::mat4 projMatrix = glm::perspective(glm::radians(70.f), (float) (m_nWindowWidth) / m_nWindowHeight, 0.1f,
-                                            100.f);
-    glm::mat4 viewMatrix = viewController.getViewMatrix();
-    glm::mat4 cubeMVMatrix = glm::translate(viewMatrix, vec3(0.f, 1.f, 0.f));
-
-    glBindVertexArray(m_cubeVAO);
-
-    glUniformMatrix4fv(uModelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(cubeMVMatrix));
-    glUniformMatrix4fv(uNormalMatrixLocation, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(cubeMVMatrix))));
-    glUniformMatrix4fv(uModelViewProjMatrixLocation, 1, GL_FALSE, glm::value_ptr(projMatrix * cubeMVMatrix));
-
-    glUniform1i(uKaTexture, ind_texture_cube);
-    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
-    glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
-
-    glDrawElements(GL_TRIANGLES, cube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
-
-    glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glBindVertexArray(0);
-}
-
-void Application::drawSphere() {
-    //glm::mat4 viewMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -5.f));
-
-    glm::mat4 viewMatrix = viewController.getViewMatrix();
-    glm::mat4 sphereMVMatrix = viewMatrix;
-    glBindVertexArray(m_sphereVAO); // bind
-    glUniformMatrix4fv(uModelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(sphereMVMatrix));
-    glUniformMatrix4fv(uNormalMatrixLocation, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(sphereMVMatrix))));
-    glUniformMatrix4fv(uModelViewProjMatrixLocation, 1, GL_FALSE, glm::value_ptr(projMatrix * sphereMVMatrix));
-    glDrawElements(GL_TRIANGLES, sphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
-}
 
 Application::~Application() {
     destroyScene();
-//    destroySphere();
-//    destroyCube();
-
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
 }
 
-void Application::destroySphere() {
-    if (m_sphereVBO) {
-        glDeleteBuffers(1, &m_sphereVBO);
-    }
-
-    if (m_sphereIBO) {
-        glDeleteBuffers(1, &m_sphereIBO);
-    }
-
-    if (m_sphereVAO) {
-        glDeleteBuffers(1, &m_sphereVAO);
-    }
-}
-
-void Application::destroyCube() {
-    if (m_cubeVBO) {
-        glDeleteBuffers(1, &m_cubeVBO);
-    }
-
-    if (m_cubeIBO) {
-        glDeleteBuffers(1, &m_cubeIBO);
-    }
-
-    if (m_cubeVAO) {
-        glDeleteBuffers(1, &m_cubeVAO);
-    }
-}
 
 void Application::destroyScene() {
     if (m_SceneVBO) {

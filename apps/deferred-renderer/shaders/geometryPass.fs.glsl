@@ -16,21 +16,16 @@ uniform vec3 uKd;
 uniform vec3 uKs;
 uniform float uShininess;
 
-out vec3 fColor;
-
 uniform sampler2D uKaTexture;
 uniform sampler2D uKdTexture;
 uniform sampler2D uKsTexture;
 uniform sampler2D uSnTexture;
 
-
-vec3 phong(){
-	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
-
-	vec3 dirToPointLight = (uPointLightPosition - vViewSpacePosition) / distToPointLight;
-
-	return uKd * (uDirectionalLightIntensity * max(0.0, dot(vViewSpaceNormal, uDirectionalLightDir)) + uPointLightIntensity * max(0.0, dot(vViewSpaceNormal, dirToPointLight)) / (distToPointLight * distToPointLight));
-}
+layout(location = 0) out vec3 fPosition;
+layout(location = 1) out vec3 fNormal;
+layout(location = 2) out vec3 fAmbient;
+layout(location = 3) out vec3 fDiffuse;
+layout(location = 4) out vec4 fGlossyShininess;
 
 vec3 blinnPhong(vec3 wi){
 	vec3 _uKd = uKd * texture(uKdTexture, vTexCoords).xyz;
@@ -54,16 +49,16 @@ vec3 blinnPhong(vec3 wi){
 
 void main(){
 
-	vec3 widir = normalize(uDirectionalLightDir);
-	vec3 colorDir = blinnPhong(widir)*uDirectionalLightIntensity;
-	vec3 wipoint = normalize(uPointLightPosition-vViewSpacePosition);
-	float d = distance(uPointLightPosition, vViewSpacePosition);
+    fPosition = normalize(vViewSpacePosition);
+    fNormal = normalize(vViewSpaceNormal);
 
-	vec3 colorPoint = blinnPhong(wipoint)*(uPointLightIntensity / (d*d));
+    vec3 _uKa = uKa * texture(uKaTexture, vTexCoords).xyz;
+    fAmbient = _uKa;
 
-	fColor = texture(uKaTexture, vTexCoords).xyz+ colorDir+ colorPoint;
-	//fColor = colorPoint;
+    vec3 _uKd = uKd * texture(uKdTexture, vTexCoords).xyz;
+    fDiffuse = _ukd;
 
-
-	//fColor = normalize(vViewSpaceNormal);
+    vec3 _uKs = uKs * texture(uKsTexture, vTexCoords).xyz;
+    float _uSn = uShininess * texture(uSnTexture, vTexCoords).x;
+    fGlossyShininess = vec4(_uKs.x,_uKs.y,_uKs.z,_uSn);
 }
