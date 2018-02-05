@@ -10,102 +10,112 @@
 using namespace glmlv;
 using namespace glm;
 
-struct Light{
+struct Light {
     vec3 position;
-    vec3 intensity;    
+    vec3 intensity;
 };
 
 
-class Application{
-    public:
-        Application(int argc, char** argv);
-        ~Application();
-        int run();
-    private:
-        const int m_nWindowWidth = 1280;
-        const int m_nWindowHeight = 720;
-        GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
+class Application {
+public:
+    Application(int argc, char **argv);
 
-        const fs::path m_AppPath;
-        const std::string m_AppName;
-        const std::string m_ImGuiIniFilename;
-        const fs::path m_ShadersRootPath;
-        const fs::path m_AssetsRootPath;
+    ~Application();
 
-        GLuint m_sphereVBO = 0;
-        GLuint m_sphereIBO = 0;
-        GLuint m_sphereVAO = 0;
+    int run();
 
-        GLuint m_cubeVBO = 0;
-        GLuint m_cubeIBO = 0;
-        GLuint m_cubeVAO = 0;
+private:
+    const int m_nWindowWidth = 1280;
+    const int m_nWindowHeight = 720;
+    GLFWHandle m_GLFWHandle{m_nWindowWidth, m_nWindowHeight,
+                            "Template"}; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
 
-        SimpleGeometry sphere;
-        SimpleGeometry cube;
+    const fs::path m_AppPath;
+    const std::string m_AppName;
+    const std::string m_ImGuiIniFilename;
+    const fs::path m_ShadersRootPath;
+    const fs::path m_AssetsRootPath;
 
-        GLProgram m_program;
+    GLuint m_sphereVBO = 0;
+    GLuint m_sphereIBO = 0;
+    GLuint m_sphereVAO = 0;
 
-        GLuint uModelViewMatrixLocation;
-        GLuint uModelViewProjMatrixLocation;
-        GLuint uNormalMatrixLocation;
+    GLuint m_cubeVBO = 0;
+    GLuint m_cubeIBO = 0;
+    GLuint m_cubeVAO = 0;
 
-        GLuint uPointLightPositionLocation;
-        GLuint uPointLightIntensityLocation;
+    SimpleGeometry sphere;
+    SimpleGeometry cube;
 
-        GLuint uDirectionalLightDirLocation;
-        GLuint uDirectionalLightIntensityLocation;
+    GLProgram m_program;
 
-        GLuint uKd;
-        
-        Light pointLight;
-        Light dirLight;
+    GLuint uModelViewMatrixLocation;
+    GLuint uModelViewProjMatrixLocation;
+    GLuint uNormalMatrixLocation;
 
-        vec3 coloruKd;
+    GLuint uPointLightPositionLocation;
+    GLuint uPointLightIntensityLocation;
+
+    GLuint uDirectionalLightDirLocation;
+    GLuint uDirectionalLightIntensityLocation;
+
+    GLuint uKd;
+
+    Light pointLight;
+    Light dirLight;
+
+    vec3 coloruKd;
 
 
-        GLuint textures[2];
-        
-        int ind_texture_cube = 0;
+    GLuint textures[2];
 
-        ViewController viewController{m_GLFWHandle.window()};
-        ///////////////////////////////////////////////////
+    int ind_texture_cube = 0;
 
-        GLuint m_SceneVBO = 0;
-        GLuint m_SceneIBO = 0;
-        GLuint m_SceneVAO = 0;
+    ViewController viewController{m_GLFWHandle.window()};
+    ///////////////////////////////////////////////////
 
-        GLuint m_texture;    
-        ObjData data;
-        std::vector<GLuint> textureIds;
+    GLuint m_SceneVBO = 0;
+    GLuint m_SceneIBO = 0;
+    GLuint m_SceneVAO = 0;
 
-        glm::mat4 projMatrix;
+    GLuint m_texture;
+    ObjData data;
+    std::vector<GLuint> textureIds;
 
-        float m_SceneSize = 0.f;
+    glm::mat4 projMatrix;
 
-        //GLuint m_textureSampler = 0;
+    float m_SceneSize = 0.f;
 
-        GLint uKaLocation;
-        GLint uKdLocation;
-        GLint uKsLocation;
-        GLint uShininessLocation;
+    //GLuint m_textureSampler = 0;
 
-        GLint uKaTexture;
-        GLint uKdTexture;
-        GLint uKsTexture;
-        GLint uSnTexture;
+    GLint uKaLocation;
+    GLint uKdLocation;
+    GLint uKsLocation;
+    GLint uShininessLocation;
 
-        ///////////////////////////////////////////////
-        void setUniformLocations();
-        void createCube();
-        void createSphere();
-        void destroyCube();
-        void destroySphere();
+    GLint uKaTexture;
+    GLint uKdTexture;
+    GLint uKsTexture;
+    GLint uSnTexture;
 
-        void drawSphere();
-        void drawCube();
-        void drawScene();
+    ///////////////////////////////////////////////
+    void setUniformLocations();
 
-        void initScene();
+    void createCube();
+
+    void createSphere();
+
+    void destroyCube();
+
+    void destroySphere();
+
+    void drawSphere();
+
+    void drawCube();
+
+    void drawScene();
+
+    void initScene();
 
     void setMaterial(const ObjData::PhongMaterial &material) const;
 
@@ -121,7 +131,7 @@ class Application{
 
     void createWhiteTexture() const;
 
-    void generateAndBindAllTexture() ;
+    void generateAndBindAllTexture();
 
     void bindDataOnVAO() const;
 };

@@ -91,6 +91,11 @@ Application::Application(int argc, char **argv) :
 
     setUniformLocations();
 
+    const GLenum m_GBufferTextureFormat[GBufferTextureCount] = { GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F };
+
+    glGenTextures(GBufferTextureCount,m_GBufferTextures);
+
+
     pointLight.position = vec3(0.f, 1.f, 0.f);
     pointLight.intensity = vec3(1E5, 0, 1E5);
 
@@ -101,10 +106,18 @@ Application::Application(int argc, char **argv) :
 
 }
 
-void Application::initScene() {
 
-    //createSphere();
-    //createCube();
+void Application::initLights() {
+    pointLight.position = vec3(0.f, 1.f, 0.f);
+    pointLight.intensity = vec3(1E5, 0, 1E5);
+
+    dirLight.position = vec3(1.f, 1.f, 1.f);
+    dirLight.intensity = vec3(1.f, 1.f, 1.f);
+
+}
+
+void Application::initScene() {
+    initLights();
 
     glGenBuffers(1, &m_SceneVBO);
     glGenBuffers(1, &m_SceneIBO);
@@ -112,34 +125,28 @@ void Application::initScene() {
     glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, data);
 
     // Fill VBO
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    fillSceneVBO();
 
     // Fill IBO
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    fillSceneIBO();
 
     //Creation texture blanche de base
-    glGenTextures(1, &m_texture);
-    glBindTexture(GL_TEXTURE_2D, m_texture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
-    vec4 white(1.f, 1.f, 1.f, 1.f);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    createWhiteTexture();
 
-    textureIds.resize(data.textures.size());
-    glGenTextures(data.textures.size(), textureIds.data());
-    for (auto i = 0; i < textureIds.size(); i++) {
-        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
-                        GL_UNSIGNED_BYTE, data.textures[i].data());
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
+    generateAndBindAllTexture();
 
+    bindDataOnVAO();
+
+    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
+    viewController.setSpeed(m_SceneSize * 0.1f);
+
+    const auto viewportSize = m_GLFWHandle.framebufferSize();
+    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize,
+                                  m_SceneSize); // near = 1% de la taille de la scene, far = 100%
+
+}
+
+void Application::bindDataOnVAO() const {
     glGenVertexArrays(1, &m_SceneVAO);
     glBindVertexArray(m_SceneVAO);
 
@@ -165,14 +172,39 @@ void Application::initScene() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO);
 
     glBindVertexArray(0);
+}
 
-    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
-    viewController.setSpeed(m_SceneSize * 0.1f);
+void Application::generateAndBindAllTexture() {
+    textureIds.resize(data.textures.size());
+    glGenTextures(data.textures.size(), textureIds.data());
+    for (auto i = 0; i < textureIds.size(); i++) {
+        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
+                        GL_UNSIGNED_BYTE, data.textures[i].data());
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
-    const auto viewportSize = m_GLFWHandle.framebufferSize();
-    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize,
-                                  m_SceneSize); // near = 1% de la taille de la scene, far = 100%
+void Application::createWhiteTexture() const {
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
+    vec4 white(1.f, 1.f, 1.f, 1.f);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
+void Application::fillSceneIBO() const {
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Application::fillSceneVBO() const {
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Application::setUniformLocations() {
@@ -265,14 +297,11 @@ void Application::setMaterial(const ObjData::PhongMaterial &material) const {
     glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
 }
 
-
-
 Application::~Application() {
     destroyScene();
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
 }
-
 
 void Application::destroyScene() {
     if (m_SceneVBO) {

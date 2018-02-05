@@ -15,6 +15,15 @@ struct Light {
     vec3 intensity;
 };
 
+enum GBufferTextureType{
+    GPosition = 0,
+    GNormal,
+    GAmbient,
+    GDiffuse,
+    GGlossyShininess,
+    GDepth, // On doit créer une texture de depth mais on écrit pas directement dedans dans le FS. OpenGL le fait pour nous (et l'utilise).
+    GBufferTextureCount
+};
 
 class Application {
 public:
@@ -77,6 +86,10 @@ private:
     GLint uSnTexture;
 
     ///////////////////////////////////////////////
+
+    GLuint m_GBufferTextures[GBufferTextureCount];
+    ///////////////////////////////////////////////
+
     void setUniformLocations();
 
     void drawScene();
@@ -88,4 +101,16 @@ private:
     void drawLights(const mat4 &viewMatrix) const;
 
     void destroyScene();
+
+    void initLights();
+
+    void fillSceneVBO() const;
+
+    void fillSceneIBO() const;
+
+    void createWhiteTexture() const;
+
+    void generateAndBindAllTexture();
+
+    void bindDataOnVAO() const;
 };
