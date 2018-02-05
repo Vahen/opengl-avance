@@ -150,7 +150,7 @@ Application::Application(int argc, char **argv) :
     // Securité
     glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER,0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     ////////
 
     initScene();
