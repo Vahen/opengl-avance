@@ -5,6 +5,7 @@
 #include <glmlv/GLProgram.hpp>
 #include <glmlv/simple_geometry.hpp>
 #include <glmlv/ViewController.hpp>
+#include <glmlv/load_obj.hpp>
 
 using namespace glmlv;
 using namespace glm;
@@ -23,13 +24,13 @@ class Application{
     private:
         const int m_nWindowWidth = 1280;
         const int m_nWindowHeight = 720;
-        glmlv::GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
+        GLFWHandle m_GLFWHandle{ m_nWindowWidth, m_nWindowHeight, "Template" }; // Note: the handle must be declared before the creation of any object managing OpenGL resource (e.g. GLProgram, GLShader)
 
-        const glmlv::fs::path m_AppPath;
+        const fs::path m_AppPath;
         const std::string m_AppName;
         const std::string m_ImGuiIniFilename;
-        const glmlv::fs::path m_ShadersRootPath;
-        const glmlv::fs::path m_AssetsRootPath;
+        const fs::path m_ShadersRootPath;
+        const fs::path m_AssetsRootPath;
 
         GLuint m_sphereVBO = 0;
         GLuint m_sphereIBO = 0;
@@ -42,33 +43,58 @@ class Application{
         SimpleGeometry sphere;
         SimpleGeometry cube;
 
-        glmlv::GLProgram m_program;
+        GLProgram m_program;
 
-        GLint uModelViewMatrix;
-        GLint uModelViewProjMatrix;
-        GLint uNormalMatrix;
+        GLuint uModelViewMatrix;
+        GLuint uModelViewProjMatrix;
+        GLuint uNormalMatrix;
 
-        GLint uPointLightPosition;
-        GLint uPointLightIntensity;
+        GLuint uPointLightPosition;
+        GLuint uPointLightIntensity;
 
-        GLint uDirectionalLightDir;
-        GLint uDirectionalLightIntensity;
+        GLuint uDirectionalLightDir;
+        GLuint uDirectionalLightIntensity;
 
-        GLint uKd;
+        //GLuint uKd;
         
-        GLint uTexture;
-
         Light pointLight;
         Light dirLight;
 
-        vec3 coloruKd;
+        //vec3 coloruKd;
 
 
         GLuint textures[2];
+        
         int ind_texture_cube = 0;
 
         ViewController viewController{m_GLFWHandle.window()};
+        ///////////////////////////////////////////////////
 
+        GLuint m_SceneVBO = 0;
+        GLuint m_SceneIBO = 0;
+        GLuint m_SceneVAO = 0;
+
+        GLuint m_texture;    
+        ObjData data;
+        std::vector<GLuint> textureIds;
+
+        glm::mat4 projMatrix;
+
+        float m_SceneSize = 0.f;
+
+        //GLuint m_textureSampler = 0;
+
+        GLint uKaLocation;
+        GLint uKdLocation;
+        GLint uKsLocation;
+        GLint uShininessLocation;
+
+        GLint uKaTexture;
+        GLint uKdTexture;
+        GLint uKsTexture;
+        GLint uSnTexture;
+
+        ///////////////////////////////////////////////
         void setUniformLocations();
         void createCube();
         void createSphere();
@@ -78,4 +104,6 @@ class Application{
         void drawSphere();
         void drawCube();
         void drawScene();
+
+        void initScene();
 };

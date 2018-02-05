@@ -99,21 +99,21 @@ Application::Application(int argc, char **argv) :
     m_program = glmlv::compileProgram({m_ShadersRootPath / "forwardRenderer" / "forward.vs.glsl",
                                        m_ShadersRootPath / "forwardRenderer" / "forward.fs.glsl"});
     m_program.use();
+
     setUniformLocations();
     
-    pointLight.position = vec3(1.f,10.f,1.f);
-    pointLight.intensity = vec3(5.f,5.f,5.f);
+    pointLight.position = vec3(0.f,1.f,0.f);
+    pointLight.intensity = vec3(1E4,0,1E4);
 
     dirLight.position = vec3(1.f,1.f,1.f);
-    dirLight.intensity = vec3(5.f,5.f,5.f);
+    dirLight.intensity = vec3(1.f,1.f,1.f);
 
     coloruKd = vec3(1.f,1.f,1.f);
 
+    //glGenTextures(2,textures);
 
-    glGenTextures(2,textures);
+    initScene();
 
-    createSphere();
-    createCube();
 
 }
 
@@ -128,12 +128,22 @@ void Application::setUniformLocations(){
     uDirectionalLightDir = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
     uDirectionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
 
-    uKd = glGetUniformLocation(m_program.glId(), "uKd");
+    //uKd = glGetUniformLocation(m_program.glId(), "uKd");
 
-    uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
+    uKaTexture = glGetUniformLocation(m_program.glId(), "uKaTexture");
+    uKdTexture = glGetUniformLocation(m_program.glId(), "uKdTexture");
+    uKsTexture = glGetUniformLocation(m_program.glId(), "uKsTexture");
+    uSnTexture = glGetUniformLocation(m_program.glId(), "uSnTexture");
+
+    uKaLocation = glGetUniformLocation(m_program.glId(), "uKa");
+    uKdLocation = glGetUniformLocation(m_program.glId(), "uKd");
+    uKsLocation = glGetUniformLocation(m_program.glId(), "uKs");
+
+    uShininessLocation = glGetUniformLocation(m_program.glId(), "uShininess");
 }
 
 Application::~Application() {
+    //destroyScene();
     destroySphere();
     destroyCube();
 
@@ -191,8 +201,9 @@ void Application::createSphere() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Here we use glGetAttribLocation(program, attribname) to obtain attrib locations; We could also directly use locations if they are set in the vertex shader (cf. triangle app)
-    GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
+    const GLint positionAttrLocation = glGetAttribLocation(m_program.glId(), "aPosition");
     const GLint normalAttrLocation = glGetAttribLocation(m_program.glId(), "aNormal");
+    const GLint uTexture = glGetUniformLocation(m_program.glId(), "uTexture");
     // const GLint colorAttrLocation = glGetAttribLocation(m_program.glId(), "aColor");
 
     glGenVertexArrays(1, &m_sphereVAO);
@@ -258,16 +269,13 @@ void Application::createCube() {
     const GLint texCoordAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
     
     auto textureImg = readImage(m_AssetsRootPath / m_AppName / "textures" / "opengl-logo.png");
-    glUniform1i(uTexture,ind_texture_cube);
+    glUniform1i(uKaTexture,ind_texture_cube);
 
-    cout << textures[ind_texture_cube] << endl;
     glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);// Bind sur GL_TEXTURE_2D
     // Met les info de l'image dans GL_TEXTURE_2D
-    cout << "deb" << endl;
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, textureImg.width(), textureImg.height());
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE, textureImg.data());
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, textureImg.width(), textureImg.height());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureImg.width(), textureImg.height(), GL_RGBA, GL_UNSIGNED_BYTE, textureImg.data());
  
-    cout << "fin" << endl;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -320,7 +328,7 @@ void Application::drawCube() {
     glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(cubeMVMatrix))));
     glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(projMatrix * cubeMVMatrix));
 
-    glUniform1i(uTexture, ind_texture_cube);
+    glUniform1i(uKaTexture, ind_texture_cube);
     glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
     glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
 
@@ -333,8 +341,6 @@ void Application::drawCube() {
 }
 
 void Application::drawSphere() {
-    glm::mat4 projMatrix = glm::perspective(glm::radians(70.f), (float) (m_nWindowWidth) / m_nWindowHeight, 0.1f,
-                                            100.f);
     //glm::mat4 viewMatrix = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -5.f));
     
     glm::mat4 viewMatrix = viewController.getViewMatrix();
@@ -348,21 +354,133 @@ void Application::drawSphere() {
 }
 
 void Application::drawScene(){
-    
-    vec3 pointLightPos_vs = vec3(viewController.getViewMatrix() * vec4(pointLight.position,1));
+    const auto viewMatrix = viewController.getViewMatrix();
+    // todo
+    vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position,1));
     glUniform3f(uPointLightPosition,pointLightPos_vs.x,pointLightPos_vs.y,pointLightPos_vs.z);
-    
-    vec3 pointLightInt_vs = vec3(viewController.getViewMatrix() * vec4(pointLight.intensity,1));
-    glUniform3f(uPointLightIntensity,pointLightInt_vs.x,pointLightInt_vs.y,pointLightInt_vs.z);
-    
-    vec3 dirLightPos_vs = vec3(viewController.getViewMatrix() * vec4(dirLight.position,1)); 
+
+    vec3 dirLightPos_vs = vec3(viewMatrix * vec4(dirLight.position,0)); 
     glUniform3f(uDirectionalLightDir,dirLightPos_vs.x,dirLightPos_vs.y,dirLightPos_vs.z);
+
+    glUniform3f(uPointLightIntensity,pointLight.intensity.x,pointLight.intensity.y,pointLight.intensity.z);
+    glUniform3f(uDirectionalLightIntensity,dirLight.intensity.x,dirLight.intensity.y,dirLight.intensity.z);
     
-    vec3 dirLightInt_vs = vec3(viewController.getViewMatrix() * vec4(dirLight.intensity,1));
-    glUniform3f(uDirectionalLightIntensity,dirLightInt_vs.x,dirLightInt_vs.y,dirLightInt_vs.z);
+    const auto modelMatrix = glm::mat4(1);
+
+    const auto mvMatrix = viewMatrix * modelMatrix;
+    const auto mvpMatrix = projMatrix * mvMatrix;
+    const auto normalMatrix = glm::transpose(glm::inverse(mvMatrix));
+
+    glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
+    glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(mvMatrix));
+    glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+
+    glBindVertexArray(m_SceneVAO);
+    uint32_t offset=0;
     
-    glUniform3f(uKd,coloruKd.x,coloruKd.y,coloruKd.z);
+    glUniform1i(uKaTexture,0);
+    glUniform1i(uKsTexture,1);
+    glUniform1i(uKdTexture,2);
+    glUniform1i(uSnTexture,3);
     
-    drawCube();
-    drawSphere();
+    for (int i=0;i<data.shapeCount;++i){
+
+        // todo -> add materiaux
+        auto materialId = data.materialIDPerShape[i];
+        const auto& material = data.materials[materialId];
+
+        glUniform3fv(uKaLocation, 1, glm::value_ptr(material.Ka));
+        glUniform3fv(uKdLocation, 1, glm::value_ptr(material.Kd));
+        glUniform3fv(uKsLocation, 1, glm::value_ptr(material.Ks));
+        glUniform1fv(uShininessLocation, 1, &material.shininess);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,(material.KaTextureId<0)?0:textureIds[material.KaTextureId]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,(material.KsTextureId<0)?0:textureIds[material.KsTextureId]);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,(material.KdTextureId<0)?0:textureIds[material.KdTextureId]);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D,(material.shininessTextureId<0)?0:textureIds[material.shininessTextureId]);
+
+
+
+        int val = data.indexCountPerShape[i];
+        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid*) (offset * sizeof(GLuint)));
+        offset+=val;
+    }
+    //drawCube();
+    //drawSphere();
+
+    
 }
+
+void Application::initScene(){
+
+    //createSphere();
+    //createCube();
+
+    glGenBuffers(1, &m_SceneVBO);
+    glGenBuffers(1, &m_SceneIBO);
+
+    glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, data);
+
+    // Fill VBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Fill IBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+    //Creation texture blanche de base
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
+    vec4 white(1.f, 1.f, 1.f, 1.f);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    textureIds.resize(data.textures.size());
+    glGenTextures(data.textures.size(), textureIds.data());
+    for (auto i=0;i<textureIds.size();i++){
+        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA, GL_UNSIGNED_BYTE, data.textures[i].data());
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenVertexArrays(1, &m_SceneVAO);
+    glBindVertexArray(m_SceneVAO);
+
+    const GLint positionAttrLocation = 0;
+    const GLint normalAttrLocation = 1;
+    const GLint texCoordsAttrLocation = 2;
+
+    glEnableVertexAttribArray(positionAttrLocation);
+    glEnableVertexAttribArray(normalAttrLocation);
+    glEnableVertexAttribArray(texCoordsAttrLocation);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO); 
+
+    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, position));
+    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, normal));
+    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f), (const GLvoid*)offsetof(Vertex3f3f2f, texCoords));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO); 
+
+    glBindVertexArray(0);
+
+    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
+    viewController.setSpeed(m_SceneSize * 0.1f); 
+
+    const auto viewportSize = m_GLFWHandle.framebufferSize();
+    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize, m_SceneSize); // near = 1% de la taille de la scene, far = 100%
+
+}
+
