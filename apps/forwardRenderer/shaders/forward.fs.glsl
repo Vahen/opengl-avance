@@ -45,6 +45,7 @@ vec3 blinnPhong(vec3 wi){
 
 
     vec3 diffuse = _uKd *clamp(dot(wi,normal),0,1);
+    // todo -> virer le max
     vec3 specular = uKs*pow(clamp(dot(halfVector, normal),0,1), max(_uSn,1));
     vec3 color = diffuse + specular;
 

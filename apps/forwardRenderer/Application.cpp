@@ -19,10 +19,8 @@ using namespace std;
 
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
-    float diffuseColor[3] = {1, 1, 1};
-    float pointLightposition[3] = {pointLight.position.x / 255.f, pointLight.position.y / 255.f,
-                                   pointLight.position.z / 255.f};
-    float dirLightposition[3] = {dirLight.position.x / 255.f, dirLight.position.y / 255.f, dirLight.position.z / 255.f};
+    float pointLightposition[3] = {pointLight.position.x, pointLight.position.y, pointLight.position.z};
+    float dirLightposition[3] = {dirLight.position.x, dirLight.position.y, dirLight.position.z};
     //float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
     // Loop until the user closes the window
     m_program.use();
@@ -46,11 +44,11 @@ int Application::run() {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
 
-            if (ImGui::ColorEdit3("pointLightPos", pointLightposition)) {
+            if (ImGui::InputFloat3("pointLightPos", pointLightposition)) {
                 pointLight.position = vec3(pointLightposition[0], pointLightposition[1], pointLightposition[2]);
             }
 
-            if (ImGui::ColorEdit3("dirLightPos", dirLightposition)) {
+            if (ImGui::InputFloat3("dirLightPos", dirLightposition)) {
                 dirLight.position = vec3(dirLightposition[0], dirLightposition[1], dirLightposition[2]);
             }
 
@@ -101,10 +99,81 @@ Application::Application(int argc, char **argv) :
 
     coloruKd = vec3(1.f, 1.f, 1.f);
 
-    //glGenTextures(2,textures);
-
     initScene();
 
+}
+
+void Application::initScene() {
+
+    //createSphere();
+    //createCube();
+
+    glGenBuffers(1, &m_SceneVBO);
+    glGenBuffers(1, &m_SceneIBO);
+
+    glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, data);
+
+    // Fill VBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Fill IBO
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
+    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+    //Creation texture blanche de base
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
+    vec4 white(1.f, 1.f, 1.f, 1.f);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    textureIds.resize(data.textures.size());
+    glGenTextures(data.textures.size(), textureIds.data());
+    for (auto i = 0; i < textureIds.size(); i++) {
+        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
+                        GL_UNSIGNED_BYTE, data.textures[i].data());
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenVertexArrays(1, &m_SceneVAO);
+    glBindVertexArray(m_SceneVAO);
+
+    const GLint positionAttrLocation = 0;
+    const GLint normalAttrLocation = 1;
+    const GLint texCoordsAttrLocation = 2;
+
+    glEnableVertexAttribArray(positionAttrLocation);
+    glEnableVertexAttribArray(normalAttrLocation);
+    glEnableVertexAttribArray(texCoordsAttrLocation);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
+
+    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, position));
+    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, normal));
+    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
+                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO);
+
+    glBindVertexArray(0);
+
+    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
+    viewController.setSpeed(m_SceneSize * 0.1f);
+
+    const auto viewportSize = m_GLFWHandle.framebufferSize();
+    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize,
+                                  m_SceneSize); // near = 1% de la taille de la scene, far = 100%
 
 }
 
@@ -133,42 +202,75 @@ void Application::setUniformLocations() {
     uShininessLocation = glGetUniformLocation(m_program.glId(), "uShininess");
 }
 
-Application::~Application() {
-    //destroyScene();
-    destroySphere();
-    destroyCube();
+void Application::drawScene() {
+    const auto viewMatrix = viewController.getViewMatrix();
+    // todo
+    drawLights(viewMatrix);
 
-    ImGui_ImplGlfwGL3_Shutdown();
-    glfwTerminate();
+    const auto modelMatrix = glm::mat4(1);
+
+    const auto mvMatrix = viewMatrix * modelMatrix;
+    const auto mvpMatrix = projMatrix * mvMatrix;
+    const auto normalMatrix = glm::transpose(glm::inverse(mvMatrix));
+
+    glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
+    glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(mvMatrix));
+    glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+
+    glBindVertexArray(m_SceneVAO);
+    uint32_t offset = 0;
+
+    glUniform1i(uKaTexture, 0);
+    glUniform1i(uKsTexture, 1);
+    glUniform1i(uKdTexture, 2);
+    glUniform1i(uSnTexture, 3);
+
+    for (int i = 0; i < data.shapeCount; ++i) {
+
+        // todo -> add materiaux
+        auto materialId = data.materialIDPerShape[i];
+        const auto &material = data.materials[materialId];
+
+        setMaterial(material);
+
+
+        int val = data.indexCountPerShape[i];
+        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
+        offset += val;
+    }
+    //drawCube();
+    //drawSphere();
+
+
 }
 
-void Application::destroySphere() {
-    if (m_sphereVBO) {
-        glDeleteBuffers(1, &m_sphereVBO);
-    }
+void Application::drawLights(const mat4 &viewMatrix) const {
+    vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position, 1));
+    glUniform3f(uPointLightPosition, pointLightPos_vs.x, pointLightPos_vs.y, pointLightPos_vs.z);
 
-    if (m_sphereIBO) {
-        glDeleteBuffers(1, &m_sphereIBO);
-    }
+    vec3 dirLightPos_vs = vec3(viewMatrix * vec4(dirLight.position, 0));
+    glUniform3f(uDirectionalLightDir, dirLightPos_vs.x, dirLightPos_vs.y, dirLightPos_vs.z);
 
-    if (m_sphereVAO) {
-        glDeleteBuffers(1, &m_sphereVAO);
-    }
+    glUniform3f(uPointLightIntensity, pointLight.intensity.x, pointLight.intensity.y, pointLight.intensity.z);
+    glUniform3f(uDirectionalLightIntensity, dirLight.intensity.x, dirLight.intensity.y, dirLight.intensity.z);
 }
 
-void Application::destroyCube() {
-    if (m_cubeVBO) {
-        glDeleteBuffers(1, &m_cubeVBO);
-    }
+void Application::setMaterial(const ObjData::PhongMaterial &material) const {
+    glUniform3fv(uKaLocation, 1, value_ptr(material.Ka));
+    glUniform3fv(uKdLocation, 1, value_ptr(material.Kd));
+    glUniform3fv(uKsLocation, 1, value_ptr(material.Ks));
+    glUniform1fv(uShininessLocation, 1, &material.shininess);
 
-    if (m_cubeIBO) {
-        glDeleteBuffers(1, &m_cubeIBO);
-    }
-
-    if (m_cubeVAO) {
-        glDeleteBuffers(1, &m_cubeVAO);
-    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : textureIds[material.KaTextureId]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : textureIds[material.KsTextureId]);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : textureIds[material.KdTextureId]);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
 }
+
 
 void Application::createSphere() {
     sphere = makeSphere(5);
@@ -220,10 +322,10 @@ void Application::createSphere() {
     );
 
     // glEnableVertexAttribArray(colorAttrLocation);
-    // glVertexAttribPointer(colorAttrLocation, 
+    // glVertexAttribPointer(colorAttrLocation,
     //                         3,
-    //                         GL_FLOAT, GL_FALSE, 
-    //                         sizeof(Vertex3f3f2f), 
+    //                         GL_FLOAT, GL_FALSE,
+    //                         sizeof(Vertex3f3f2f),
     //                         (const GLvoid*) offsetof(Vertex3f3f2f, color)
     //                     );
 
@@ -345,138 +447,53 @@ void Application::drawSphere() {
     glBindVertexArray(0);
 }
 
-void Application::drawScene() {
-    const auto viewMatrix = viewController.getViewMatrix();
-    // todo
-    vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position, 1));
-    glUniform3f(uPointLightPosition, pointLightPos_vs.x, pointLightPos_vs.y, pointLightPos_vs.z);
+Application::~Application() {
+    destroyScene();
+//    destroySphere();
+//    destroyCube();
 
-    vec3 dirLightPos_vs = vec3(viewMatrix * vec4(dirLight.position, 0));
-    glUniform3f(uDirectionalLightDir, dirLightPos_vs.x, dirLightPos_vs.y, dirLightPos_vs.z);
-
-    glUniform3f(uPointLightIntensity, pointLight.intensity.x, pointLight.intensity.y, pointLight.intensity.z);
-    glUniform3f(uDirectionalLightIntensity, dirLight.intensity.x, dirLight.intensity.y, dirLight.intensity.z);
-
-    const auto modelMatrix = glm::mat4(1);
-
-    const auto mvMatrix = viewMatrix * modelMatrix;
-    const auto mvpMatrix = projMatrix * mvMatrix;
-    const auto normalMatrix = glm::transpose(glm::inverse(mvMatrix));
-
-    glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
-    glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(mvMatrix));
-    glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-
-    glBindVertexArray(m_SceneVAO);
-    uint32_t offset = 0;
-
-    glUniform1i(uKaTexture, 0);
-    glUniform1i(uKsTexture, 1);
-    glUniform1i(uKdTexture, 2);
-    glUniform1i(uSnTexture, 3);
-
-    for (int i = 0; i < data.shapeCount; ++i) {
-
-        // todo -> add materiaux
-        auto materialId = data.materialIDPerShape[i];
-        const auto &material = data.materials[materialId];
-
-        glUniform3fv(uKaLocation, 1, glm::value_ptr(material.Ka));
-        glUniform3fv(uKdLocation, 1, glm::value_ptr(material.Kd));
-        glUniform3fv(uKsLocation, 1, glm::value_ptr(material.Ks));
-        glUniform1fv(uShininessLocation, 1, &material.shininess);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : textureIds[material.KaTextureId]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : textureIds[material.KsTextureId]);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : textureIds[material.KdTextureId]);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
-
-
-        int val = data.indexCountPerShape[i];
-        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
-        offset += val;
-    }
-    //drawCube();
-    //drawSphere();
-
-
+    ImGui_ImplGlfwGL3_Shutdown();
+    glfwTerminate();
 }
 
-void Application::initScene() {
-
-    //createSphere();
-    //createCube();
-
-    glGenBuffers(1, &m_SceneVBO);
-    glGenBuffers(1, &m_SceneIBO);
-
-    glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, data);
-
-    // Fill VBO
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Fill IBO
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-    //Creation texture blanche de base
-    glGenTextures(1, &m_texture);
-    glBindTexture(GL_TEXTURE_2D, m_texture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
-    vec4 white(1.f, 1.f, 1.f, 1.f);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_FLOAT, &white);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    textureIds.resize(data.textures.size());
-    glGenTextures(data.textures.size(), textureIds.data());
-    for (auto i = 0; i < textureIds.size(); i++) {
-        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
-                        GL_UNSIGNED_BYTE, data.textures[i].data());
+void Application::destroySphere() {
+    if (m_sphereVBO) {
+        glDeleteBuffers(1, &m_sphereVBO);
     }
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenVertexArrays(1, &m_SceneVAO);
-    glBindVertexArray(m_SceneVAO);
+    if (m_sphereIBO) {
+        glDeleteBuffers(1, &m_sphereIBO);
+    }
 
-    const GLint positionAttrLocation = 0;
-    const GLint normalAttrLocation = 1;
-    const GLint texCoordsAttrLocation = 2;
-
-    glEnableVertexAttribArray(positionAttrLocation);
-    glEnableVertexAttribArray(normalAttrLocation);
-    glEnableVertexAttribArray(texCoordsAttrLocation);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-
-    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, position));
-    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, normal));
-    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords));
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO);
-
-    glBindVertexArray(0);
-
-    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
-    viewController.setSpeed(m_SceneSize * 0.1f);
-
-    const auto viewportSize = m_GLFWHandle.framebufferSize();
-    projMatrix = glm::perspective(70.f, float(viewportSize.x) / viewportSize.y, 0.01f * m_SceneSize,
-                                  m_SceneSize); // near = 1% de la taille de la scene, far = 100%
-
+    if (m_sphereVAO) {
+        glDeleteBuffers(1, &m_sphereVAO);
+    }
 }
 
+void Application::destroyCube() {
+    if (m_cubeVBO) {
+        glDeleteBuffers(1, &m_cubeVBO);
+    }
+
+    if (m_cubeIBO) {
+        glDeleteBuffers(1, &m_cubeIBO);
+    }
+
+    if (m_cubeVAO) {
+        glDeleteBuffers(1, &m_cubeVAO);
+    }
+}
+
+void Application::destroyScene() {
+    if (m_SceneVBO) {
+        glDeleteBuffers(1, &m_SceneVBO);
+    }
+
+    if (m_SceneIBO) {
+        glDeleteBuffers(1, &m_SceneIBO);
+    }
+
+    if (m_SceneVAO) {
+        glDeleteBuffers(1, &m_SceneVAO);
+    }
+}

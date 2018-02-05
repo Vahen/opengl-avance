@@ -106,4 +106,10 @@ class Application{
         void drawScene();
 
         void initScene();
+
+    void setMaterial(const ObjData::PhongMaterial &material) const;
+
+    void drawLights(const mat4 &viewMatrix) const;
+
+    void destroyScene();
 };
