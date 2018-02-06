@@ -49,15 +49,15 @@ private:
 
     GLProgram m_program;
 
-    GLuint uModelViewMatrixLocation;
-    GLuint uModelViewProjMatrixLocation;
-    GLuint uNormalMatrixLocation;
+    GLint uModelViewMatrixLocation;
+    GLint uModelViewProjMatrixLocation;
+    GLint uNormalMatrixLocation;
 
-    GLuint uPointLightPositionLocation;
-    GLuint uPointLightIntensityLocation;
+    GLint uPointLightPositionLocation;
+    GLint uPointLightIntensityLocation;
 
-    GLuint uDirectionalLightDirLocation;
-    GLuint uDirectionalLightIntensityLocation;
+    GLint uDirectionalLightDirLocation;
+    GLint uDirectionalLightIntensityLocation;
 
     GLuint uKd;
 
@@ -93,10 +93,10 @@ private:
     GLint uKsLocation;
     GLint uShininessLocation;
 
-    GLint uKaTexture;
-    GLint uKdTexture;
-    GLint uKsTexture;
-    GLint uSnTexture;
+    GLint uKaTextureLocation;
+    GLint uKdTextureLocation;
+    GLint uKsTextureLocation;
+    GLint uSnTextureLocation;
 
     ///////////////////////////////////////////////
     void setUniformLocations();
@@ -117,17 +117,17 @@ private:
 
     void initScene();
 
-    void setMaterial(const ObjData::PhongMaterial &material) const;
+    void setMaterial(const ObjData::PhongMaterial &material);
 
-    void drawLights(const mat4 &viewMatrix) const;
+    void drawLights(const mat4 &viewMatrix) ;
 
     void destroyScene();
 
     void initLights();
 
-    void fillSceneVBO() const;
+    void fillSceneVBO();
 
-    void fillSceneIBO() const;
+    void fillSceneIBO() ;
 
     void createWhiteTexture() ;
 

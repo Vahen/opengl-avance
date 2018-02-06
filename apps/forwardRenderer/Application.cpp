@@ -177,7 +177,7 @@ void Application::generateAndBindAllTexture() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::createWhiteTexture(){
+void Application::createWhiteTexture() {
     glGenTextures(1, &m_texture);
     glBindTexture(GL_TEXTURE_2D, m_texture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
@@ -186,35 +186,35 @@ void Application::createWhiteTexture(){
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Application::fillSceneIBO() const {
+void Application::fillSceneIBO() {
     glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
     glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::fillSceneVBO() const {
+void Application::fillSceneVBO() {
     glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
     glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Application::setUniformLocations() {
-    uModelViewMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewMatrixLocation");
-    uModelViewProjMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrixLocation");
-    uNormalMatrixLocation = glGetUniformLocation(m_program.glId(), "uNormalMatrixLocation");
+    uModelViewMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
+    uModelViewProjMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
+    uNormalMatrixLocation = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
 
     uPointLightPositionLocation = glGetUniformLocation(m_program.glId(), "uPointLighPosition");
-    uPointLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uPointLightIntensityLocation");
+    uPointLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
 
-    uDirectionalLightDirLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightDirLocation");
-    uDirectionalLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensityLocation");
+    uDirectionalLightDirLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
+    uDirectionalLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
 
     //uKd = glGetUniformLocation(m_program.glId(), "uKd");
 
-    uKaTexture = glGetUniformLocation(m_program.glId(), "uKaTexture");
-    uKdTexture = glGetUniformLocation(m_program.glId(), "uKdTexture");
-    uKsTexture = glGetUniformLocation(m_program.glId(), "uKsTexture");
-    uSnTexture = glGetUniformLocation(m_program.glId(), "uSnTexture");
+    uKaTextureLocation = glGetUniformLocation(m_program.glId(), "uKaTexture");
+    uKdTextureLocation = glGetUniformLocation(m_program.glId(), "uKdTexture");
+    uKsTextureLocation = glGetUniformLocation(m_program.glId(), "uKsTexture");
+    uSnTextureLocation = glGetUniformLocation(m_program.glId(), "uSnTexture");
 
     uKaLocation = glGetUniformLocation(m_program.glId(), "uKa");
     uKdLocation = glGetUniformLocation(m_program.glId(), "uKd");
@@ -241,10 +241,10 @@ void Application::drawScene() {
     glBindVertexArray(m_SceneVAO);
     uint32_t offset = 0;
 
-    glUniform1i(uKaTexture, 0);
-    glUniform1i(uKsTexture, 1);
-    glUniform1i(uKdTexture, 2);
-    glUniform1i(uSnTexture, 3);
+    glUniform1i(uKaTextureLocation, 0);
+    glUniform1i(uKsTextureLocation, 1);
+    glUniform1i(uKdTextureLocation, 2);
+    glUniform1i(uSnTextureLocation, 3);
 
     for (int i = 0; i < data.shapeCount; ++i) {
 
@@ -265,7 +265,7 @@ void Application::drawScene() {
 
 }
 
-void Application::drawLights(const mat4 &viewMatrix) const {
+void Application::drawLights(const mat4 &viewMatrix) {
     vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position, 1));
     glUniform3f(uPointLightPositionLocation, pointLightPos_vs.x, pointLightPos_vs.y, pointLightPos_vs.z);
 
@@ -276,7 +276,7 @@ void Application::drawLights(const mat4 &viewMatrix) const {
     glUniform3f(uDirectionalLightIntensityLocation, dirLight.intensity.x, dirLight.intensity.y, dirLight.intensity.z);
 }
 
-void Application::setMaterial(const ObjData::PhongMaterial &material) const {
+void Application::setMaterial(const ObjData::PhongMaterial &material) {
     glUniform3fv(uKaLocation, 1, value_ptr(material.Ka));
     glUniform3fv(uKdLocation, 1, value_ptr(material.Kd));
     glUniform3fv(uKsLocation, 1, value_ptr(material.Ks));
@@ -383,7 +383,7 @@ void Application::createCube() {
     const GLint texCoordAttrLocation = glGetAttribLocation(m_program.glId(), "aTexCoords");
 
     auto textureImg = readImage(m_AssetsRootPath / m_AppName / "textures" / "opengl-logo.png");
-    glUniform1i(uKaTexture, ind_texture_cube);
+    glUniform1i(uKaTextureLocation, ind_texture_cube);
 
     glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);// Bind sur GL_TEXTURE_2D
     // Met les info de l'image dans GL_TEXTURE_2D
@@ -443,7 +443,7 @@ void Application::drawCube() {
     glUniformMatrix4fv(uNormalMatrixLocation, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(cubeMVMatrix))));
     glUniformMatrix4fv(uModelViewProjMatrixLocation, 1, GL_FALSE, glm::value_ptr(projMatrix * cubeMVMatrix));
 
-    glUniform1i(uKaTexture, ind_texture_cube);
+    glUniform1i(uKaTextureLocation, ind_texture_cube);
     glActiveTexture(GL_TEXTURE0 + ind_texture_cube);
     glBindTexture(GL_TEXTURE_2D, textures[ind_texture_cube]);
 
@@ -462,7 +462,8 @@ void Application::drawSphere() {
     glm::mat4 sphereMVMatrix = viewMatrix;
     glBindVertexArray(m_sphereVAO); // bind
     glUniformMatrix4fv(uModelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(sphereMVMatrix));
-    glUniformMatrix4fv(uNormalMatrixLocation, 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(sphereMVMatrix))));
+    glUniformMatrix4fv(uNormalMatrixLocation, 1, GL_FALSE,
+                       glm::value_ptr(glm::transpose(glm::inverse(sphereMVMatrix))));
     glUniformMatrix4fv(uModelViewProjMatrixLocation, 1, GL_FALSE, glm::value_ptr(projMatrix * sphereMVMatrix));
     glDrawElements(GL_TRIANGLES, sphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
