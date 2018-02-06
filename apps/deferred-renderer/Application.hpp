@@ -45,17 +45,17 @@ private:
     const fs::path m_ShadersRootPath;
     const fs::path m_AssetsRootPath;
 
-    GLProgram m_program;
+    GLProgram m_programGeometryPass;
 
-    GLuint uModelViewMatrixLocation;
-    GLuint uModelViewProjMatrixLocation;
-    GLuint uNormalMatrixLocation;
+    GLint uModelViewMatrixLocation;
+    GLint uModelViewProjMatrixLocation;
+    GLint uNormalMatrixLocation;
 
-    GLuint uPointLightPositionLocation;
-    GLuint uPointLightIntensityLocation;
+    GLint uPointLightPositionLocation;
+    GLint uPointLightIntensityLocation;
 
-    GLuint uDirectionalLightDirLocation;
-    GLuint uDirectionalLightIntensityLocation;
+    GLint uDirectionalLightDirLocation;
+    GLint uDirectionalLightIntensityLocation;
 
     Light pointLight;
     Light dirLight;
@@ -80,15 +80,18 @@ private:
     GLint uKsLocation;
     GLint uShininessLocation;
 
-    GLint uKaTexture;
-    GLint uKdTexture;
-    GLint uKsTexture;
-    GLint uSnTexture;
+    GLint uKaTextureLocation;
+    GLint uKdTextureLocation;
+    GLint uKsTextureLocation;
+    GLint uSnTextureLocation;
 
     ///////////////////////////////////////////////
 
     GLuint m_GBufferTextures[GBufferTextureCount];
+    const char * m_GBufferTexNames[GBufferTextureCount] = { "position", "normal", "ambient", "diffuse", "glossyShininess", "depth" };
 
+    const GLenum m_GBufferTextureFormat[GBufferTextureCount] = {GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F,
+                                                                GL_DEPTH_COMPONENT32F};
     GLuint m_FBO;
     ///////////////////////////////////////////////
 

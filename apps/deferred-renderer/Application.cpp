@@ -21,15 +21,15 @@ int Application::run() {
     float clearColor[3] = {0, 0, 0};
     float pointLightposition[3] = {pointLight.position.x, pointLight.position.y, pointLight.position.z};
     float dirLightposition[3] = {dirLight.position.x, dirLight.position.y, dirLight.position.z};
-    //float pointLightposition[3] = {pointLight.position.x/255.f, pointLight.position.y/255.f, pointLight.position.z/255.f};
     // Loop until the user closes the window
-    m_program.use();
+    GLint current = GPosition;
+    m_programGeometryPass.use();
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
 
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
         // Put here rendering code
         //
         //
@@ -56,16 +56,23 @@ int Application::run() {
                 dirLight.position = vec3(dirLightposition[0], dirLightposition[1], dirLightposition[2]);
             }
 
-//            ImGui::RadioButton("Albedo");
-//            ImGui::RadioButton("Normal");
-//            ImGui::RadioButton("Depth");
-//            ImGui::RadioButton("Specular");
-//            ImGui::RadioButton("Shadow");
+            for (int32_t i = GPosition; i < GDepth; ++i){
+                if (ImGui::RadioButton(m_GBufferTexNames[i], current == i))
+                    current = GBufferTextureType(i);
+            }
+
 
             ImGui::End();
         }
         const auto viewportSize = m_GLFWHandle.framebufferSize();
         glViewport(0, 0, viewportSize.x, viewportSize.y);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + current);
+        glBlitFramebuffer(0, 0, m_nWindowWidth, m_nWindowHeight, 0, 0, m_nWindowWidth, m_nWindowHeight,
+                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
         ImGui::Render();
 
         /* Poll for and process events */
@@ -95,51 +102,58 @@ Application::Application(int argc, char **argv) :
     glEnable(GL_DEPTH_TEST);
 
     // Here we load and compile shaders from the library
-    m_program = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
+    m_programGeometryPass = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
                                        m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
-    m_program.use();
+    m_programGeometryPass.use();
 
+    initScene();
     setUniformLocations();
 
-    const GLenum m_GBufferTextureFormat[GBufferTextureCount] = {GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F,
-                                                                GL_DEPTH_COMPONENT32F};
     glGenTextures(GBufferTextureCount, m_GBufferTextures);
 
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GPosition]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GPosition], m_nWindowWidth, m_nWindowHeight);
-
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GNormal]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GNormal], m_nWindowWidth, m_nWindowHeight);
-
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GAmbient]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GAmbient], m_nWindowWidth, m_nWindowHeight);
-
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDiffuse]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDiffuse], m_nWindowWidth, m_nWindowHeight);
-
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GGlossyShininess]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GGlossyShininess], m_nWindowWidth, m_nWindowHeight);
-
-    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDepth]);
-    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDepth], m_nWindowWidth, m_nWindowHeight);
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GPosition]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GPosition], m_nWindowWidth, m_nWindowHeight);
+//
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GNormal]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GNormal], m_nWindowWidth, m_nWindowHeight);
+//
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GAmbient]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GAmbient], m_nWindowWidth, m_nWindowHeight);
+//
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDiffuse]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDiffuse], m_nWindowWidth, m_nWindowHeight);
+//
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GGlossyShininess]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GGlossyShininess], m_nWindowWidth, m_nWindowHeight);
+//
+//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDepth]);
+//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDepth], m_nWindowWidth, m_nWindowHeight);
+    for (int i = GPosition; i < GBufferTextureCount; ++i)    {
+        glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[i]);
+        glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[i], m_nWindowWidth, m_nWindowHeight);
+    }
 
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GPosition, GL_TEXTURE_2D,
-                           m_GBufferTextures[GPosition], 0);
+//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GPosition, GL_TEXTURE_2D,
+//                           m_GBufferTextures[GPosition], 0);
+//
+//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GNormal, GL_TEXTURE_2D,
+//                           m_GBufferTextures[GNormal], 0);
+//
+//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GAmbient,
+//                           GL_TEXTURE_2D, m_GBufferTextures[GAmbient], 0);
+//
+//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GDiffuse,
+//                           GL_TEXTURE_2D, m_GBufferTextures[GDiffuse], 0);
+//
+//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GGlossyShininess, GL_TEXTURE_2D,
+//                           m_GBufferTextures[GGlossyShininess], 0);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GNormal, GL_TEXTURE_2D,
-                           m_GBufferTextures[GNormal], 0);
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GAmbient,
-                           GL_TEXTURE_2D, m_GBufferTextures[GAmbient], 0);
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GDiffuse,
-                           GL_TEXTURE_2D, m_GBufferTextures[GDiffuse], 0);
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GGlossyShininess, GL_TEXTURE_2D,
-                           m_GBufferTextures[GGlossyShininess], 0);
+    for (int i = GPosition; i < GDepth; ++i)    {
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_GBufferTextures[i], 0);
+    }
 
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBufferTextures[GDepth], 0);
 
@@ -148,12 +162,15 @@ Application::Application(int argc, char **argv) :
     glDrawBuffers(5, drawBuffers);
 
     // Securité
-    glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "FB error, status: " << status << std::endl;
+        throw std::runtime_error("FBO error");
+    }
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    ////////
 
-    initScene();
 
 }
 
@@ -259,28 +276,26 @@ void Application::fillSceneVBO() const {
 }
 
 void Application::setUniformLocations() {
-    uModelViewMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewMatrixLocation");
-    uModelViewProjMatrixLocation = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrixLocation");
-    uNormalMatrixLocation = glGetUniformLocation(m_program.glId(), "uNormalMatrixLocation");
+    uModelViewMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewMatrix");
+    uModelViewProjMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewProjMatrix");
+    uNormalMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uNormalMatrix");
 
-    uPointLightPositionLocation = glGetUniformLocation(m_program.glId(), "uPointLighPosition");
-    uPointLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uPointLightIntensityLocation");
+    uPointLightPositionLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uPointLighPosition");
+    uPointLightIntensityLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uPointLightIntensity");
 
-    uDirectionalLightDirLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightDirLocation");
-    uDirectionalLightIntensityLocation = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensityLocation");
+    uDirectionalLightDirLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uDirectionalLightDir");
+    uDirectionalLightIntensityLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uDirectionalLightIntensity");
 
-    //uKd = glGetUniformLocation(m_program.glId(), "uKd");
+    uKaTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKaTexture");
+    uKdTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKdTexture");
+    uKsTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKsTexture");
+    uSnTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uSnTexture");
 
-    uKaTexture = glGetUniformLocation(m_program.glId(), "uKaTexture");
-    uKdTexture = glGetUniformLocation(m_program.glId(), "uKdTexture");
-    uKsTexture = glGetUniformLocation(m_program.glId(), "uKsTexture");
-    uSnTexture = glGetUniformLocation(m_program.glId(), "uSnTexture");
+    uKaLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKa");
+    uKdLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKd");
+    uKsLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKs");
 
-    uKaLocation = glGetUniformLocation(m_program.glId(), "uKa");
-    uKdLocation = glGetUniformLocation(m_program.glId(), "uKd");
-    uKsLocation = glGetUniformLocation(m_program.glId(), "uKs");
-
-    uShininessLocation = glGetUniformLocation(m_program.glId(), "uShininess");
+    uShininessLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uShininess");
 }
 
 void Application::drawScene() {
@@ -301,20 +316,15 @@ void Application::drawScene() {
     glBindVertexArray(m_SceneVAO);
     uint32_t offset = 0;
 
-    glUniform1i(uKaTexture, 0);
-    glUniform1i(uKsTexture, 1);
-    glUniform1i(uKdTexture, 2);
-    glUniform1i(uSnTexture, 3);
+    glUniform1i(uKaTextureLocation, 0);
+    glUniform1i(uKsTextureLocation, 1);
+    glUniform1i(uKdTextureLocation, 2);
+    glUniform1i(uSnTextureLocation, 3);
 
     for (int i = 0; i < data.shapeCount; ++i) {
-
-        // todo -> add materiaux
         auto materialId = data.materialIDPerShape[i];
         const auto &material = data.materials[materialId];
-
         setMaterial(material);
-
-
         int val = data.indexCountPerShape[i];
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
         offset += val;

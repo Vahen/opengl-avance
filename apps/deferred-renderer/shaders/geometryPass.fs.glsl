@@ -53,12 +53,11 @@ void main(){
     fNormal = normalize(vViewSpaceNormal);
 
     vec3 _uKa = uKa * texture(uKaTexture, vTexCoords).xyz;
-    fAmbient = _uKa;
-
     vec3 _uKd = uKd * texture(uKdTexture, vTexCoords).xyz;
-    fDiffuse = _ukd;
-
     vec3 _uKs = uKs * texture(uKsTexture, vTexCoords).xyz;
     float _uSn = uShininess * texture(uSnTexture, vTexCoords).x;
-    fGlossyShininess = vec4(_uKs.x,_uKs.y,_uKs.z,_uSn);
+
+    fAmbient = _uKa;
+    fDiffuse = _uKd;
+    fGlossyShininess = vec4(_uKs,_uSn);
 }
