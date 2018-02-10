@@ -23,7 +23,7 @@ int Application::run() {
     float dirLightposition[3] = {dirLight.position.x, dirLight.position.y, dirLight.position.z};
     // Loop until the user closes the window
     GLint current = GPosition;
-    m_programGeometryPass.use();
+
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
 
@@ -33,9 +33,31 @@ int Application::run() {
         // Put here rendering code
         //
         //
+        m_programGeometryPass.use();
         drawScene();
-
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+        m_programShadingPass.use();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        sendLights(viewController.getViewMatrix());
+
+        // todo bind ces buffers
+        glBindVertexArray(m_triangleVAO);
+
+        glUniform1i(uGPositionLocation, 0);
+        glUniform1i(uGNormalLocation, 1);
+        glUniform1i(uGAmbientLocation, 2);
+        glUniform1i(uGDiffuseLocation, 3);
+        glUniform1i(uGlossyShininessLocation, 4);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+     
+        glBindVertexArray(0);
+
+        
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -102,32 +124,22 @@ Application::Application(int argc, char **argv) :
     glEnable(GL_DEPTH_TEST);
 
     // Here we load and compile shaders from the library
+
     m_programGeometryPass = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
                                        m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
-    m_programGeometryPass.use();
 
+    m_programShadingPass = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
+                                       m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl"});
+    
+    setUniformLocationsGeometry();
+    setUniformLocationsShading();
     initScene();
-    setUniformLocations();
+
+    initTriangle();
+
 
     glGenTextures(GBufferTextureCount, m_GBufferTextures);
 
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GPosition]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GPosition], m_nWindowWidth, m_nWindowHeight);
-//
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GNormal]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GNormal], m_nWindowWidth, m_nWindowHeight);
-//
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GAmbient]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GAmbient], m_nWindowWidth, m_nWindowHeight);
-//
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDiffuse]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDiffuse], m_nWindowWidth, m_nWindowHeight);
-//
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GGlossyShininess]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GGlossyShininess], m_nWindowWidth, m_nWindowHeight);
-//
-//    glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDepth]);
-//    glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[GDepth], m_nWindowWidth, m_nWindowHeight);
     for (int i = GPosition; i < GBufferTextureCount; ++i)    {
         glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[i]);
         glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[i], m_nWindowWidth, m_nWindowHeight);
@@ -135,21 +147,6 @@ Application::Application(int argc, char **argv) :
 
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
-
-//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GPosition, GL_TEXTURE_2D,
-//                           m_GBufferTextures[GPosition], 0);
-//
-//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GNormal, GL_TEXTURE_2D,
-//                           m_GBufferTextures[GNormal], 0);
-//
-//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GAmbient,
-//                           GL_TEXTURE_2D, m_GBufferTextures[GAmbient], 0);
-//
-//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GDiffuse,
-//                           GL_TEXTURE_2D, m_GBufferTextures[GDiffuse], 0);
-//
-//    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + GGlossyShininess, GL_TEXTURE_2D,
-//                           m_GBufferTextures[GGlossyShininess], 0);
 
     for (int i = GPosition; i < GDepth; ++i)    {
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_GBufferTextures[i], 0);
@@ -171,7 +168,7 @@ Application::Application(int argc, char **argv) :
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-
+    //// Init buffers shading pass
 }
 
 
@@ -275,16 +272,43 @@ void Application::fillSceneVBO() const {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::setUniformLocations() {
+void Application::initTriangle(){
+    glGenBuffers(1, &m_triangleVBO);
+ 
+    glm::vec2 triangleVertices[] = {
+        glm::vec2(-1.f, -1.f),
+        glm::vec2(3.f, -1.f),
+        glm::vec2(-1.f, 3.f)
+    };
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO);
+ 
+    glBufferStorage(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, 0);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 
+    glGenVertexArrays(1, &m_triangleVAO);
+ 
+    // Vertex attrib locations are defined in the vertex shader (we can also use glGetAttribLocation(program, attribname) with attribute names after program compilation in order to get these numbers)
+    const GLint positionAttrLocation = 0;
+ 
+    glBindVertexArray(m_triangleVAO);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO);
+ 
+    glEnableVertexAttribArray(positionAttrLocation);
+    glVertexAttribPointer(positionAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 
+    glBindVertexArray(0);
+}
+
+void Application::setUniformLocationsGeometry(){
+    m_programGeometryPass.use();
     uModelViewMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewMatrix");
     uModelViewProjMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewProjMatrix");
     uNormalMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uNormalMatrix");
-
-    uPointLightPositionLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uPointLighPosition");
-    uPointLightIntensityLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uPointLightIntensity");
-
-    uDirectionalLightDirLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uDirectionalLightDir");
-    uDirectionalLightIntensityLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uDirectionalLightIntensity");
 
     uKaTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKaTexture");
     uKdTextureLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uKdTexture");
@@ -298,10 +322,25 @@ void Application::setUniformLocations() {
     uShininessLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uShininess");
 }
 
+void Application::setUniformLocationsShading() {
+    m_programShadingPass.use();
+
+    uPointLightPositionLocation = glGetUniformLocation(m_programShadingPass.glId(), "uPointLighPosition");
+    uPointLightIntensityLocation = glGetUniformLocation(m_programShadingPass.glId(), "uPointLightIntensity");
+
+    uDirectionalLightDirLocation = glGetUniformLocation(m_programShadingPass.glId(), "uDirectionalLightDir");
+    uDirectionalLightIntensityLocation = glGetUniformLocation(m_programShadingPass.glId(), "uDirectionalLightIntensity");
+
+    uGPositionLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGPosition");
+    uGNormalLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGNormal");
+    uGAmbientLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGAmbient");
+    uGDiffuseLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGDiffuse");
+    uGlossyShininessLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGlossyShininess");
+
+}
+
 void Application::drawScene() {
     const auto viewMatrix = viewController.getViewMatrix();
-    // todo
-    drawLights(viewMatrix);
 
     const auto modelMatrix = glm::mat4(1);
 
@@ -329,9 +368,10 @@ void Application::drawScene() {
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
         offset += val;
     }
+    glBindVertexArray(0);
 }
 
-void Application::drawLights(const mat4 &viewMatrix) const {
+void Application::sendLights(const mat4 &viewMatrix) const {
     vec3 pointLightPos_vs = vec3(viewMatrix * vec4(pointLight.position, 1));
     glUniform3f(uPointLightPositionLocation, pointLightPos_vs.x, pointLightPos_vs.y, pointLightPos_vs.z);
 

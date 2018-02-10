@@ -46,6 +46,7 @@ private:
     const fs::path m_AssetsRootPath;
 
     GLProgram m_programGeometryPass;
+    GLProgram m_programShadingPass;
 
     GLint uModelViewMatrixLocation;
     GLint uModelViewProjMatrixLocation;
@@ -93,17 +94,29 @@ private:
     const GLenum m_GBufferTextureFormat[GBufferTextureCount] = {GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F,
                                                                 GL_DEPTH_COMPONENT32F};
     GLuint m_FBO;
+
+    GLint uGPositionLocation;
+    GLint uGNormalLocation;
+    GLint uGAmbientLocation;
+    GLint uGDiffuseLocation;
+    GLint uGlossyShininessLocation;
+
+    GLuint m_triangleVBO;
+    GLuint m_triangleIBO;
+    GLuint m_triangleVAO;
     ///////////////////////////////////////////////
 
-    void setUniformLocations();
+    void setUniformLocationsGeometry();
+    void setUniformLocationsShading();
 
     void drawScene();
 
     void initScene();
+    void initTriangle();
 
     void setMaterial(const ObjData::PhongMaterial &material) const;
 
-    void drawLights(const mat4 &viewMatrix) const;
+    void sendLights(const mat4 &viewMatrix) const;
 
     void destroyScene();
 
