@@ -54,10 +54,10 @@ int Application::run() {
         glUniform1i(uGlossyShininessLocation, 4);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
-     
+
         glBindVertexArray(0);
 
-        
+
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -78,7 +78,7 @@ int Application::run() {
                 dirLight.position = vec3(dirLightposition[0], dirLightposition[1], dirLightposition[2]);
             }
 
-            for (int32_t i = GPosition; i < GDepth; ++i){
+            for (int32_t i = GPosition; i < GDepth; ++i) {
                 if (ImGui::RadioButton(m_GBufferTexNames[i], current == i))
                     current = GBufferTextureType(i);
             }
@@ -126,11 +126,11 @@ Application::Application(int argc, char **argv) :
     // Here we load and compile shaders from the library
 
     m_programGeometryPass = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
-                                       m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
+                                                   m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
 
     m_programShadingPass = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
-                                       m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl"});
-    
+                                                  m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl"});
+
     setUniformLocationsGeometry();
     setUniformLocationsShading();
     initScene();
@@ -140,7 +140,7 @@ Application::Application(int argc, char **argv) :
 
     glGenTextures(GBufferTextureCount, m_GBufferTextures);
 
-    for (int i = GPosition; i < GBufferTextureCount; ++i)    {
+    for (int i = GPosition; i < GBufferTextureCount; ++i) {
         glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[i]);
         glTexStorage2D(GL_TEXTURE_2D, 1, m_GBufferTextureFormat[i], m_nWindowWidth, m_nWindowHeight);
     }
@@ -148,7 +148,7 @@ Application::Application(int argc, char **argv) :
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
 
-    for (int i = GPosition; i < GDepth; ++i)    {
+    for (int i = GPosition; i < GDepth; ++i) {
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_GBufferTextures[i], 0);
     }
 
@@ -272,39 +272,39 @@ void Application::fillSceneVBO() const {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Application::initTriangle(){
+void Application::initTriangle() {
     glGenBuffers(1, &m_triangleVBO);
- 
+
     glm::vec2 triangleVertices[] = {
-        glm::vec2(-1.f, -1.f),
-        glm::vec2(3.f, -1.f),
-        glm::vec2(-1.f, 3.f)
+            glm::vec2(-1.f, -1.f),
+            glm::vec2(3.f, -1.f),
+            glm::vec2(-1.f, 3.f)
     };
- 
+
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO);
- 
+
     glBufferStorage(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, 0);
- 
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
- 
+
     glGenVertexArrays(1, &m_triangleVAO);
- 
+
     // Vertex attrib locations are defined in the vertex shader (we can also use glGetAttribLocation(program, attribname) with attribute names after program compilation in order to get these numbers)
     const GLint positionAttrLocation = 0;
- 
+
     glBindVertexArray(m_triangleVAO);
- 
+
     glBindBuffer(GL_ARRAY_BUFFER, m_triangleVBO);
- 
+
     glEnableVertexAttribArray(positionAttrLocation);
     glVertexAttribPointer(positionAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0);
- 
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
- 
+
     glBindVertexArray(0);
 }
 
-void Application::setUniformLocationsGeometry(){
+void Application::setUniformLocationsGeometry() {
     m_programGeometryPass.use();
     uModelViewMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewMatrix");
     uModelViewProjMatrixLocation = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewProjMatrix");
@@ -329,13 +329,14 @@ void Application::setUniformLocationsShading() {
     uPointLightIntensityLocation = glGetUniformLocation(m_programShadingPass.glId(), "uPointLightIntensity");
 
     uDirectionalLightDirLocation = glGetUniformLocation(m_programShadingPass.glId(), "uDirectionalLightDir");
-    uDirectionalLightIntensityLocation = glGetUniformLocation(m_programShadingPass.glId(), "uDirectionalLightIntensity");
+    uDirectionalLightIntensityLocation = glGetUniformLocation(m_programShadingPass.glId(),
+                                                              "uDirectionalLightIntensity");
 
-    uGPositionLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGPosition");
-    uGNormalLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGNormal");
-    uGAmbientLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGAmbient");
-    uGDiffuseLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGDiffuse");
-    uGlossyShininessLocation = glGetUniformLocation(m_programShadingPass.glId(),"uGlossyShininess");
+    uGPositionLocation = glGetUniformLocation(m_programShadingPass.glId(), "uGPosition");
+    uGNormalLocation = glGetUniformLocation(m_programShadingPass.glId(), "uGNormal");
+    uGAmbientLocation = glGetUniformLocation(m_programShadingPass.glId(), "uGAmbient");
+    uGDiffuseLocation = glGetUniformLocation(m_programShadingPass.glId(), "uGDiffuse");
+    uGlossyShininessLocation = glGetUniformLocation(m_programShadingPass.glId(), "uGlossyShininess");
 
 }
 
