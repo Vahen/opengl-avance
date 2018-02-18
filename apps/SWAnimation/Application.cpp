@@ -13,186 +13,60 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/io.hpp>
 
+using namespace glmlv;
+using namespace glm;
+using namespace std;
+
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
-
-    bool directionalSMResolutionDirty = false;
-    bool directionalSMDirty = true;
 
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
 
-        const auto projMatrix = glm::perspective(70.f, float(m_nWindowWidth) / m_nWindowHeight,
-                                                 0.01f * m_SceneSizeLength, m_SceneSizeLength);
+        const auto projMatrix = perspective(70.f, float(m_nWindowWidth) / m_nWindowHeight,
+                                            0.01f * m_SceneSizeLength, m_SceneSizeLength);
         const auto viewMatrix = m_viewController.getViewMatrix();
         const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
 
         const float sceneRadius = m_SceneSizeLength * 0.5f;
 
-        const auto dirLightUpVector = computeDirectionVectorUp(glm::radians(m_DirLightPhiAngleDegrees),
-                                                               glm::radians(m_DirLightThetaAngleDegrees));
-        const auto dirLightViewMatrix = glm::lookAt(m_SceneCenter + m_DirLightDirection * sceneRadius, m_SceneCenter,
-                                                    dirLightUpVector); // Will not work if m_DirLightDirection is colinear to lightUpVector
-        const auto dirLightProjMatrix = glm::ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius,
-                                                   0.01f * sceneRadius, 2.f * sceneRadius);
+        const auto dirLightUpVector = computeDirectionVectorUp(radians(m_DirLightPhiAngleDegrees),
+                                                               radians(m_DirLightThetaAngleDegrees));
+        const auto dirLightViewMatrix = lookAt(m_SceneCenter + m_DirLightDirection * sceneRadius, m_SceneCenter,
+                                               dirLightUpVector); // Will not work if m_DirLightDirection is colinear to lightUpVector
+        const auto dirLightProjMatrix = ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius,
+                                              0.01f * sceneRadius, 2.f * sceneRadius);
 
         // Shadow map computation if necessary
         {
-            if (directionalSMResolutionDirty) {
-                glDeleteTextures(1, &m_directionalSMTexture);
-
-                // Realocate texture
-                glGenTextures(1, &m_directionalSMTexture);
-                glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
-                glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, m_nDirectionalSMResolution,
-                               m_nDirectionalSMResolution);
-                glBindTexture(GL_TEXTURE_2D, 0);
-
-                // Attach new texture to FBO
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
-                glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
-                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_directionalSMTexture,
-                                       0);
-
-                const auto fboStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-                if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-                    std::cerr << "Error on building directional shadow mapping framebuffer. Error code = " << fboStatus
-                              << std::endl;
-                    throw std::runtime_error("Error on building directional shadow mapping framebuffer.");
-                }
-
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-                directionalSMResolutionDirty = false;
-                directionalSMDirty = true; // The shadow map must also be recomputed
+            if (m_directionalSMResolutionDirty) {
+                cleanShadowMap();
+                m_directionalSMResolutionDirty = false;
+                m_directionalSMDirty = true; // The shadow map must also be recomputed
             }
 
-            if (directionalSMDirty) {
+            if (m_directionalSMDirty) {
                 m_directionalSMProgram.use();
-
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
-                glViewport(0, 0, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                glUniformMatrix4fv(m_uDirLightViewProjMatrix, 1, GL_FALSE,
-                                   glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix));
-
-                glBindVertexArray(m_SceneVAO);
-
-                // We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
-                uint32_t offset = 0;
-                for (int i = 0; i < m_data.shapeCount; ++i) {
-                    int val = m_data.indexCountPerShape[i];
-                    glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
-                    offset += val;
-                }
-
-                glBindVertexArray(0);
-
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-                directionalSMDirty = false;
+                computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
+                m_directionalSMDirty = false;
             }
         }
-
 
         // Geometry pass
         {
             m_geometryPassProgram.use();
             geometryPass(projMatrix, viewMatrix);
-
         }
 
         // Put here rendering code
-        const auto viewportSize = m_GLFWHandle.framebufferSize();
-        glViewport(0, 0, viewportSize.x, viewportSize.y);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (m_CurrentlyDisplayed == Display_Beauty) // Beauty
-        {
-            // Shading pass
-            {
-                m_shadingPassProgram.use();
-                shadingPass(viewMatrix, rcpViewMatrix, dirLightViewMatrix, dirLightProjMatrix);
-            }
-        } else if (m_CurrentlyDisplayed == Display_GDepth) {
-            m_displayDepthProgram.use();
-            displayDepth();
-
-        } else if (m_CurrentlyDisplayed == Display_GPosition) {
-            m_displayPositionProgram.use();
-            displayPosition(projMatrix);
-
-        } else if (m_CurrentlyDisplayed == Display_DirectionalLightDepthMap) {
-            m_displayDepthProgram.use();
-            displayDirectionalLightDepthMap();
-
-        } else {
-            // GBuffer display
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBufferFBO);
-            const auto gBufferIndex = m_CurrentlyDisplayed - Display_GPosition;
-            glReadBuffer(GL_COLOR_ATTACHMENT0 + gBufferIndex);
-            glBlitFramebuffer(0, 0, m_nWindowWidth, m_nWindowHeight,
-                              0, 0, m_nWindowWidth, m_nWindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        }
-
+        renderScene(projMatrix, viewMatrix, rcpViewMatrix, dirLightViewMatrix, dirLightProjMatrix);
 
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
         {
-            ImGui::Begin("GUI");
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-                        ImGui::GetIO().Framerate);
-            ImGui::SetColorEditOptions(ImGuiColorEditFlags_RGB);
-            if (ImGui::ColorEdit3("clearColor", clearColor)) {
-                glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
-            }
-//            if (ImGui::Button("Sort shapes wrt materialID")) {
-//                std::sort(m_data.materialIDPerShape.begin(),m_data.materialIDPerShape.end(), [&](auto lhs, auto rhs) {
-//                    return lhs.materialID < rhs.materialID;
-//                });
-//            }
-            if (ImGui::CollapsingHeader("Directional Light")) {
-                ImGui::ColorEdit3("DirLightColor", glm::value_ptr(m_DirLightColor));
-                ImGui::DragFloat("DirLightIntensity", &m_DirLightIntensity, 0.1f, 0.f, 100.f);
-                bool angleChanged = ImGui::DragFloat("Phi Angle", &m_DirLightPhiAngleDegrees, 1.0f, 0.0f, 360.f);
-                angleChanged = ImGui::DragFloat("Theta Angle", &m_DirLightThetaAngleDegrees, 1.0f, 0.0f, 180.f) ||
-                               angleChanged;
-
-                if (angleChanged) {
-                    m_DirLightDirection = computeDirectionVector(glm::radians(m_DirLightPhiAngleDegrees),
-                                                                 glm::radians(m_DirLightThetaAngleDegrees));
-                    directionalSMDirty = true;
-                }
-
-                if (ImGui::InputInt("DirShadowMap Res", &m_nDirectionalSMResolution)) {
-                    if (m_nDirectionalSMResolution <= 0)
-                        m_nDirectionalSMResolution = 1;
-                    directionalSMResolutionDirty = true;
-                }
-
-                ImGui::InputFloat("DirShadowMap Bias", &m_DirLightSMBias);
-                ImGui::InputInt("DirShadowMap SampleCount", &m_DirLightSMSampleCount);
-                ImGui::InputFloat("DirShadowMap Spread", &m_DirLightSMSpread);
-            }
-
-            if (ImGui::CollapsingHeader("Point Light")) {
-                ImGui::ColorEdit3("PointLightColor", glm::value_ptr(m_PointLightColor));
-                ImGui::DragFloat("PointLightIntensity", &m_PointLightIntensity, 0.1f, 0.f, 16000.f);
-                ImGui::InputFloat3("Position", glm::value_ptr(m_PointLightPosition));
-            }
-
-            if (ImGui::CollapsingHeader("Display")) {
-                for (int32_t i = Display_Beauty; i < Display_Count; ++i) {
-                    ImGui::RadioButton(m_DisplayNames[i], &m_CurrentlyDisplayed, i);
-                }
-            }
-
-            ImGui::End();
+            GUIDisplay(clearColor);
         }
 
 
@@ -214,6 +88,144 @@ int Application::run() {
     return 0;
 }
 
+void Application::GUIDisplay(float *clearColor) {
+    ImGui::Begin("GUI");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
+    ImGui::SetColorEditOptions(ImGuiColorEditFlags_RGB);
+    if (ImGui::ColorEdit3("clearColor", clearColor)) {
+        glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
+    }
+//            if (ImGui::Button("Sort shapes wrt materialID")) {
+//                sort(m_data.materialIDPerShape.begin(),m_data.materialIDPerShape.end(), [&](auto lhs, auto rhs) {
+//                    return lhs.materialID < rhs.materialID;
+//                });
+//            }
+    if (ImGui::CollapsingHeader("Directional Light")) {
+        ImGui::ColorEdit3("DirLightColor", value_ptr(m_DirLightColor));
+        ImGui::DragFloat("DirLightIntensity", &m_DirLightIntensity, 0.1f, 0.f, 100.f);
+        bool angleChanged = ImGui::DragFloat("Phi Angle", &m_DirLightPhiAngleDegrees, 1.0f, 0.0f, 360.f);
+        angleChanged = ImGui::DragFloat("Theta Angle", &m_DirLightThetaAngleDegrees, 1.0f, 0.0f, 180.f) ||
+                       angleChanged;
+
+        if (angleChanged) {
+            m_DirLightDirection = computeDirectionVector(radians(m_DirLightPhiAngleDegrees),
+                                                         radians(m_DirLightThetaAngleDegrees));
+            m_directionalSMDirty = true;
+        }
+
+        if (ImGui::InputInt("DirShadowMap Res", &m_nDirectionalSMResolution)) {
+            if (m_nDirectionalSMResolution <= 0)
+                m_nDirectionalSMResolution = 1;
+            m_directionalSMResolutionDirty = true;
+        }
+
+        ImGui::InputFloat("DirShadowMap Bias", &m_DirLightSMBias);
+        ImGui::InputInt("DirShadowMap SampleCount", &m_DirLightSMSampleCount);
+        ImGui::InputFloat("DirShadowMap Spread", &m_DirLightSMSpread);
+    }
+
+    if (ImGui::CollapsingHeader("Point Light")) {
+        ImGui::ColorEdit3("PointLightColor", value_ptr(m_PointLightColor));
+        ImGui::DragFloat("PointLightIntensity", &m_PointLightIntensity, 0.1f, 0.f, 16000.f);
+        ImGui::InputFloat3("Position", value_ptr(m_PointLightPosition));
+    }
+
+    if (ImGui::CollapsingHeader("Display")) {
+        for (int32_t i = Display_Beauty; i < Display_Count; ++i) {
+            ImGui::RadioButton(m_DisplayNames[i], &m_CurrentlyDisplayed, i);
+        }
+    }
+
+    ImGui::InputFloat("MovementSpeed", &m_speed);
+    ImGui::End();
+}
+
+void Application::renderScene(const mat4 &projMatrix, const mat4 &viewMatrix, const mat4 &rcpViewMatrix,
+                              const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) const {
+    const auto viewportSize = m_GLFWHandle.framebufferSize();
+    glViewport(0, 0, viewportSize.x, viewportSize.y);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (m_CurrentlyDisplayed == Display_Beauty) // Beauty
+    {
+        // Shading pass
+        {
+            m_shadingPassProgram.use();
+            shadingPass(viewMatrix, rcpViewMatrix, dirLightViewMatrix, dirLightProjMatrix);
+        }
+    } else if (m_CurrentlyDisplayed == Display_GDepth) {
+        m_displayDepthProgram.use();
+        displayDepth();
+
+    } else if (m_CurrentlyDisplayed == Display_GPosition) {
+        m_displayPositionProgram.use();
+        displayPosition(projMatrix);
+
+    } else if (m_CurrentlyDisplayed == Display_DirectionalLightDepthMap) {
+        m_displayDepthProgram.use();
+        displayDirectionalLightDepthMap();
+
+    } else {
+        // GBuffer display
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBufferFBO);
+        const auto gBufferIndex = m_CurrentlyDisplayed - Display_GPosition;
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + gBufferIndex);
+        glBlitFramebuffer(0, 0, m_nWindowWidth, m_nWindowHeight,
+                          0, 0, m_nWindowWidth, m_nWindowHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
+}
+
+void Application::cleanShadowMap() {
+    glDeleteTextures(1, &m_directionalSMTexture);
+
+    // Realocate texture
+    glGenTextures(1, &m_directionalSMTexture);
+    glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, m_nDirectionalSMResolution,
+                   m_nDirectionalSMResolution);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Attach new texture to FBO
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
+    glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_directionalSMTexture,
+                           0);
+
+    const auto fboStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+        cerr << "Error on building directional shadow mapping framebuffer. Error code = " << fboStatus << endl;
+        throw runtime_error("Error on building directional shadow mapping framebuffer.");
+    }
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) const {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
+    glViewport(0, 0, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUniformMatrix4fv(m_uDirLightViewProjMatrix, 1, GL_FALSE,
+                       value_ptr(dirLightProjMatrix * dirLightViewMatrix));
+
+    glBindVertexArray(m_SceneVAO);
+
+    // We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
+    uint32_t offset = 0;
+    for (int i = 0; i < m_data.shapeCount; ++i) {
+        int val = m_data.indexCountPerShape[i];
+        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
+        offset += val;
+    }
+
+    glBindVertexArray(0);
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
 void Application::displayDirectionalLightDepthMap() const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_directionalSMTexture);
@@ -225,7 +237,7 @@ void Application::displayDirectionalLightDepthMap() const {
     glBindVertexArray(0);
 }
 
-void Application::displayPosition(const glm::mat4 &projMatrix) const {
+void Application::displayPosition(const mat4 &projMatrix) const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GPosition]);
 
@@ -233,10 +245,10 @@ void Application::displayPosition(const glm::mat4 &projMatrix) const {
 
     const auto rcpProjMat = inverse(projMatrix);
 
-    const glm::vec4 frustrumTopRight(1, 1, 1, 1);
+    const vec4 frustrumTopRight(1, 1, 1, 1);
     const auto frustrumTopRight_view = rcpProjMat * frustrumTopRight;
 
-    glUniform3fv(m_uSceneSizeLocation, 1, glm::value_ptr(frustrumTopRight_view / frustrumTopRight_view.w));
+    glUniform3fv(m_uSceneSizeLocation, 1, value_ptr(frustrumTopRight_view / frustrumTopRight_view.w));
 
     glBindVertexArray(m_TriangleVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -254,16 +266,16 @@ void Application::displayDepth() const {
     glBindVertexArray(0);
 }
 
-void Application::shadingPass(const glm::mat4 &viewMatrix, const glm::mat4 &rcpViewMatrix,
-                              const glm::mat4 &dirLightViewMatrix,
-                              const glm::mat4 &dirLightProjMatrix) const {
+void Application::shadingPass(const mat4 &viewMatrix, const mat4 &rcpViewMatrix,
+                              const mat4 &dirLightViewMatrix,
+                              const mat4 &dirLightProjMatrix) const {
     glUniform3fv(m_uDirectionalLightDirLocation, 1,
-                 value_ptr(glm::vec3(viewMatrix * glm::vec4(normalize(m_DirLightDirection), 0))));
+                 value_ptr(vec3(viewMatrix * vec4(normalize(m_DirLightDirection), 0))));
     glUniform3fv(m_uDirectionalLightIntensityLocation, 1,
                  value_ptr(m_DirLightColor * m_DirLightIntensity));
 
     glUniform3fv(m_uPointLightPositionLocation, 1,
-                 value_ptr(glm::vec3(viewMatrix * glm::vec4(m_PointLightPosition, 1))));
+                 value_ptr(vec3(viewMatrix * vec4(m_PointLightPosition, 1))));
     glUniform3fv(m_uPointLightIntensityLocation, 1,
                  value_ptr(m_PointLightColor * m_PointLightIntensity));
 
@@ -273,7 +285,7 @@ void Application::shadingPass(const glm::mat4 &viewMatrix, const glm::mat4 &rcpV
     glUniform1fv(m_uDirLightShadowMapSpread, 1, &m_DirLightSMSpread);
 
     glUniformMatrix4fv(m_uDirLightViewProjMatrix_shadingPass, 1, GL_FALSE,
-                       glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix * rcpViewMatrix));
+                       value_ptr(dirLightProjMatrix * dirLightViewMatrix * rcpViewMatrix));
 
     for (int32_t i = GPosition; i < GDepth; ++i) {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -292,21 +304,21 @@ void Application::shadingPass(const glm::mat4 &viewMatrix, const glm::mat4 &rcpV
     glBindVertexArray(0);
 }
 
-void Application::geometryPass(const glm::mat4 &projMatrix, const glm::mat4 &viewMatrix) const {
+void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_GBufferFBO);
 
     glViewport(0, 0, m_nWindowWidth, m_nWindowHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto modelMatrix = glm::mat4();
-
-    const auto mvMatrix = viewMatrix * modelMatrix;
+    const auto modelMatrix = mat4();
+    //const auto mvMatrix = viewMatrix * modelMatrix;
+    const auto mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
     const auto mvpMatrix = projMatrix * mvMatrix;
-    const auto normalMatrix = glm::transpose(inverse(mvMatrix));
+    const auto normalMatrix = transpose(inverse(mvMatrix));
 
-    glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, glm::value_ptr(mvpMatrix));
+    glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
     glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
-    glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
 
     // Same sampler for all texture units
     glBindSampler(0, m_textureSampler);
@@ -357,7 +369,7 @@ void Application::setMaterial(const ObjData::PhongMaterial &material) const {
 }
 
 Application::Application(int argc, char **argv) :
-        m_AppPath{glmlv::fs::path{argv[0]}},
+        m_AppPath{fs::path{argv[0]}},
         m_AppName{m_AppPath.stem().string()},
         m_ImGuiIniFilename{m_AppName + ".imgui.ini"},
         m_ShadersRootPath{m_AppPath.parent_path() / "shaders"},
@@ -388,9 +400,8 @@ void Application::initShadowData() {
 
     const auto fboStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "Error on building directional shadow mapping framebuffer. Error code = " << fboStatus
-                  << std::endl;
-        throw std::runtime_error("Error on building directional shadow mapping framebuffer.");
+        cerr << "Error on building directional shadow mapping framebuffer. Error code = " << fboStatus << endl;
+        throw runtime_error("Error on building directional shadow mapping framebuffer.");
     }
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -412,13 +423,13 @@ void Application::initScene() {
         const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
         loadObj(objPath, m_data);
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
-        m_SceneSizeLength = glm::length(m_SceneSize);
+        m_SceneSizeLength = length(m_SceneSize);
         m_SceneCenter = 0.5f * (m_data.bboxMax + m_data.bboxMin);
 
-        std::cout << "# of shapes    : " << m_data.shapeCount << std::endl;
-        std::cout << "# of materials : " << m_data.materialCount << std::endl;
-        std::cout << "# of vertex    : " << m_data.vertexBuffer.size() << std::endl;
-        std::cout << "# of triangles    : " << m_data.indexBuffer.size() / 3 << std::endl;
+        cout << "# of shapes    : " << m_data.shapeCount << endl;
+        cout << "# of materials : " << m_data.materialCount << endl;
+        cout << "# of vertex    : " << m_data.vertexBuffer.size() << endl;
+        cout << "# of triangles    : " << m_data.indexBuffer.size() / 3 << endl;
 
         // Fill VBO
         fillSceneVBO();
@@ -426,46 +437,10 @@ void Application::initScene() {
         // Fill IBO
         fillSceneIBO();
 
-        // Init shape infos
-//        uint32_t indexOffset = 0;
-//        for (auto shapeID = 0; shapeID < data.indexCountPerShape.size(); ++shapeID) {
-//            m_shapes.emplace_back();
-//            auto &shape = m_shapes.back();
-//            shape.indexCount = data.indexCountPerShape[shapeID];
-//            shape.indexOffset = indexOffset;
-//            shape.materialID = data.materialIDPerShape[shapeID];
-//            indexOffset += shape.indexCount;
-//        }
-
         createWhiteTexture();
 
         // Upload all textures to the GPU
-
         generateAndBindAllTexture();
-
-//        for (const auto &material : data.materials) {
-//            PhongMaterial newMaterial;
-//            newMaterial.Ka = material.Ka;
-//            newMaterial.Kd = material.Kd;
-//            newMaterial.Ks = material.Ks;
-//            newMaterial.shininess = material.shininess;
-//            newMaterial.KaTextureId = material.KaTextureId >= 0 ? textureIds[material.KaTextureId] : m_WhiteTexture;
-//            newMaterial.KdTextureId = material.KdTextureId >= 0 ? textureIds[material.KdTextureId] : m_WhiteTexture;
-//            newMaterial.KsTextureId = material.KsTextureId >= 0 ? textureIds[material.KsTextureId] : m_WhiteTexture;
-//            newMaterial.shininessTextureId =
-//                    material.shininessTextureId >= 0 ? textureIds[material.shininessTextureId] : m_WhiteTexture;
-//
-//            m_SceneMaterials.emplace_back(newMaterial);
-//        }
-//
-//        m_DefaultMaterial.Ka = glm::vec3(0);
-//        m_DefaultMaterial.Kd = glm::vec3(1);
-//        m_DefaultMaterial.Ks = glm::vec3(1);
-//        m_DefaultMaterial.shininess = 32.f;
-//        m_DefaultMaterial.KaTextureId = m_WhiteTexture;
-//        m_DefaultMaterial.KdTextureId = m_WhiteTexture;
-//        m_DefaultMaterial.KsTextureId = m_WhiteTexture;
-//        m_DefaultMaterial.shininessTextureId = m_WhiteTexture;
     }
 
     // Fill VAO
@@ -503,26 +478,26 @@ void Application::bindDataOnVAO() {
     glEnableVertexAttribArray(normalAttrLocation);
     glEnableVertexAttribArray(texCoordsAttrLocation);
 
-    glBindBuffer(GL_ARRAY_BUFFER,
-                 m_SceneVBO); // We bind the VBO because the next 3 calls will read what VBO is bound in order to know where the data is stored
+    // We bind the VBO because the next 3 calls will read what VBO is bound in order to know where the data is stored
+    glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
 
     glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(glmlv::Vertex3f3f2f, position));
+                          (const GLvoid *) offsetof(Vertex3f3f2f, position));
     glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(glmlv::Vertex3f3f2f, normal));
+                          (const GLvoid *) offsetof(Vertex3f3f2f, normal));
     glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3f3f2f),
-                          (const GLvoid *) offsetof(glmlv::Vertex3f3f2f, texCoords));
+                          (const GLvoid *) offsetof(Vertex3f3f2f, texCoords));
 
-    glBindBuffer(GL_ARRAY_BUFFER,
-                 0); // We can unbind the VBO because OpenGL has "written" in the VAO what VBO it needs to read when the VAO will be drawn
+    // We can unbind the VBO because OpenGL has "written" in the VAO what VBO it needs to read when the VAO will be drawn
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
-                 m_SceneIBO); // Binding the IBO to GL_ELEMENT_ARRAY_BUFFER while a VAO is bound "writes" it in the VAO for usage when the VAO will be drawn
+    // Binding the IBO to GL_ELEMENT_ARRAY_BUFFER while a VAO is bound "writes" it in the VAO for usage when the VAO will be drawn
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SceneIBO);
 
     glBindVertexArray(0);
 }
 
-void Application::createWhiteTexture(){
+void Application::createWhiteTexture() {
     glGenTextures(1, &m_WhiteTexture);
     glBindTexture(GL_TEXTURE_2D, m_WhiteTexture);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, 1, 1);
@@ -556,29 +531,29 @@ void Application::initShadersData() {
 }
 
 void Application::initDirectionnalSMData() {
-    m_directionalSMProgram = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "directionalSM.vs.glsl",
-                                                    m_ShadersRootPath / m_AppName / "directionalSM.fs.glsl"});
+    m_directionalSMProgram = compileProgram({m_ShadersRootPath / m_AppName / "directionalSM.vs.glsl",
+                                             m_ShadersRootPath / m_AppName / "directionalSM.fs.glsl"});
     m_uDirLightViewProjMatrix = glGetUniformLocation(m_directionalSMProgram.glId(), "uDirLightViewProjMatrix");
 }
 
 void Application::initDisplayPositionData() {
-    m_displayPositionProgram = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
-                                                      m_ShadersRootPath / m_AppName / "displayPosition.fs.glsl"});
+    m_displayPositionProgram = compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
+                                               m_ShadersRootPath / m_AppName / "displayPosition.fs.glsl"});
 
     m_uGPositionSamplerLocation = glGetUniformLocation(m_displayPositionProgram.glId(), "uGPosition");
     m_uSceneSizeLocation = glGetUniformLocation(m_displayPositionProgram.glId(), "uSceneSize");
 }
 
 void Application::initDisplayDepthData() {
-    m_displayDepthProgram = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
-                                                   m_ShadersRootPath / m_AppName / "displayDepth.fs.glsl"});
+    m_displayDepthProgram = compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
+                                            m_ShadersRootPath / m_AppName / "displayDepth.fs.glsl"});
 
     m_uGDepthSamplerLocation = glGetUniformLocation(m_displayDepthProgram.glId(), "uGDepth");
 }
 
 void Application::initShadingPassData() {
-    m_shadingPassProgram = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
-                                                  m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl"});
+    m_shadingPassProgram = compileProgram({m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl",
+                                           m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl"});
 
     m_uGBufferSamplerLocations[GPosition] = glGetUniformLocation(m_shadingPassProgram.glId(), "uGPosition");
     m_uGBufferSamplerLocations[GNormal] = glGetUniformLocation(m_shadingPassProgram.glId(), "uGNormal");
@@ -604,8 +579,8 @@ void Application::initShadingPassData() {
 }
 
 void Application::initGeometryPassData() {
-    m_geometryPassProgram = glmlv::compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
-                                                   m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
+    m_geometryPassProgram = compileProgram({m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl",
+                                            m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl"});
 
     m_uModelViewProjMatrixLocation = glGetUniformLocation(m_geometryPassProgram.glId(), "uModelViewProjMatrix");
     m_uModelViewMatrixLocation = glGetUniformLocation(m_geometryPassProgram.glId(), "uModelViewMatrix");
@@ -645,8 +620,8 @@ void Application::initGBuffer() {
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "FB error, status: " << status << std::endl;
-        throw std::runtime_error("FBO error");
+        cerr << "FB error, status: " << status << endl;
+        throw runtime_error("FBO error");
     }
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

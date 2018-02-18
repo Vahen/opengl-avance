@@ -35,6 +35,7 @@ enum DisplayType {
     Display_DirectionalLightDepthMap,
     Display_Count
 };
+
 class Application {
 public:
     Application(int argc, char **argv);
@@ -77,14 +78,10 @@ private:
     const glmlv::fs::path m_ShadersRootPath;
     const glmlv::fs::path m_AssetsRootPath;
 
-
-
     const GLenum m_GBufferTextureFormat[GBufferTextureCount] = {GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F,
                                                                 GL_DEPTH_COMPONENT32F};
     GLuint m_GBufferTextures[GBufferTextureCount];
     GLuint m_GBufferFBO; // Framebuffer object
-
-
 
     const char *m_DisplayNames[Display_Count] = {"beauty", "position", "normal", "ambient", "diffuse",
                                                  "glossyShininess", "depth", "directionalLightDepth"};
@@ -177,6 +174,10 @@ private:
     GLuint m_directionalSMTexture;
     int32_t m_nDirectionalSMResolution = 4096;
 
+    float m_speed = 0.01f;
+    bool m_directionalSMResolutionDirty = false;
+    bool m_directionalSMDirty = true;
+
     void geometryPass(const glm::mat4 &projMatrix, const glm::mat4 &viewMatrix) const;
 
     void shadingPass(const glm::mat4 &viewMatrix, const glm::mat4 &rcpViewMatrix,
@@ -209,4 +210,16 @@ private:
     void fillSceneIBO() const;
 
     void setMaterial(const ObjData::PhongMaterial &material) const;
+
+    void computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) const;
+
+    void cleanShadowMap();
+
+    void renderScene(const mat4 &projMatrix,
+                     const mat4 &viewMatrix,
+                     const mat4 &rcpViewMatrix,
+                     const mat4 &dirLightViewMatrix,
+                     const mat4 &dirLightProjMatrix) const;
+
+    void GUIDisplay(float *clearColor);
 };
