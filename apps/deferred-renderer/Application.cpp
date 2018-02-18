@@ -44,7 +44,6 @@ int Application::run() {
 
         sendLights(viewController.getViewMatrix());
 
-        // todo bind ces buffers
         glBindVertexArray(m_triangleVAO);
 
         glUniform1i(uGPositionLocation, 0);
@@ -187,7 +186,7 @@ void Application::initScene() {
     glGenBuffers(1, &m_SceneVBO);
     glGenBuffers(1, &m_SceneIBO);
 
-    glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, data);
+    glmlv::loadObj({m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj"}, m_data);
 
     // Fill VBO
     fillSceneVBO();
@@ -202,7 +201,7 @@ void Application::initScene() {
 
     bindDataOnVAO();
 
-    m_SceneSize = glm::length(data.bboxMax - data.bboxMin);
+    m_SceneSize = glm::length(m_data.bboxMax - m_data.bboxMin);
     viewController.setSpeed(m_SceneSize * 0.1f);
 
     const auto viewportSize = m_GLFWHandle.framebufferSize();
@@ -240,13 +239,13 @@ void Application::bindDataOnVAO() {
 }
 
 void Application::generateAndBindAllTexture() {
-    textureIds.resize(data.textures.size());
-    glGenTextures(data.textures.size(), textureIds.data());
+    textureIds.resize(m_data.textures.size());
+    glGenTextures(m_data.textures.size(), textureIds.data());
     for (auto i = 0; i < textureIds.size(); i++) {
         glBindTexture(GL_TEXTURE_2D, textureIds[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, data.textures[i].width(), data.textures[i].height());
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.textures[i].width(), data.textures[i].height(), GL_RGBA,
-                        GL_UNSIGNED_BYTE, data.textures[i].data());
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, m_data.textures[i].width(), m_data.textures[i].height());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_data.textures[i].width(), m_data.textures[i].height(), GL_RGBA,
+                        GL_UNSIGNED_BYTE, m_data.textures[i].data());
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -262,13 +261,13 @@ void Application::createWhiteTexture() {
 
 void Application::fillSceneIBO() const {
     glBindBuffer(GL_ARRAY_BUFFER, m_SceneIBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.indexBuffer.size() * sizeof(uint32_t), data.indexBuffer.data(), 0);
+    glBufferStorage(GL_ARRAY_BUFFER, m_data.indexBuffer.size() * sizeof(uint32_t), m_data.indexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Application::fillSceneVBO() const {
     glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-    glBufferStorage(GL_ARRAY_BUFFER, data.vertexBuffer.size() * sizeof(Vertex3f3f2f), data.vertexBuffer.data(), 0);
+    glBufferStorage(GL_ARRAY_BUFFER, m_data.vertexBuffer.size() * sizeof(Vertex3f3f2f), m_data.vertexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -361,11 +360,11 @@ void Application::drawScene() {
     glUniform1i(uKdTextureLocation, 2);
     glUniform1i(uSnTextureLocation, 3);
 
-    for (int i = 0; i < data.shapeCount; ++i) {
-        auto materialId = data.materialIDPerShape[i];
-        const auto &material = data.materials[materialId];
+    for (int i = 0; i < m_data.shapeCount; ++i) {
+        auto materialId = m_data.materialIDPerShape[i];
+        const auto &material = m_data.materials[materialId];
         setMaterial(material);
-        int val = data.indexCountPerShape[i];
+        int val = m_data.indexCountPerShape[i];
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
         offset += val;
     }

@@ -79,7 +79,7 @@ private:
     GLuint m_SceneVAO = 0;
 
     GLuint m_texture;
-    ObjData data;
+    ObjData m_data;
     std::vector<GLuint> textureIds;
 
     glm::mat4 projMatrix;
