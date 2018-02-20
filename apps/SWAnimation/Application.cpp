@@ -310,11 +310,12 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
     glViewport(0, 0, m_nWindowWidth, m_nWindowHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto modelMatrix = mat4();
+    auto modelMatrix = mat4();
     //const auto mvMatrix = viewMatrix * modelMatrix;
-    const auto mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
-    const auto mvpMatrix = projMatrix * mvMatrix;
-    const auto normalMatrix = transpose(inverse(mvMatrix));
+    auto mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+    mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
+    auto mvpMatrix = projMatrix * mvMatrix;
+    auto normalMatrix = transpose(inverse(mvMatrix));
 
     glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
     glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
@@ -334,8 +335,21 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
 
     glBindVertexArray(m_SceneVAO);
 
+    // todo -> modif les matrices selon l'objet affiché
     uint32_t offset = 0;
     for (int i = 0; i < m_data.shapeCount; ++i) {
+        if (i == 1) {
+            // Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
+            mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
+            mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, 1));
+            mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
+            mvpMatrix = projMatrix * mvMatrix;
+            normalMatrix = transpose(inverse(mvMatrix));
+        }
+        glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
+        glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
+        glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
+
         auto materialId = m_data.materialIDPerShape[i];
         const auto &material = m_data.materials[materialId];
         setMaterial(material);
@@ -420,10 +434,15 @@ void Application::initScene() {
     glGenBuffers(1, &m_SceneIBO);
 
     {
-        const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
-        loadObj(objPath, m_data);
+        //const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
+        //loadObj(objPath, m_data, true);
+        const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj";
+        loadObj(objPath, m_data, true);
+        loadObj(objPath, m_data, true);
+
+
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
-        m_SceneSizeLength = length(m_SceneSize);
+        m_SceneSizeLength = glm::length(m_SceneSize);
         m_SceneCenter = 0.5f * (m_data.bboxMax + m_data.bboxMin);
 
         cout << "# of shapes    : " << m_data.shapeCount << endl;
@@ -460,8 +479,7 @@ void Application::fillSceneIBO() const {
 
 void Application::fillSceneVBO() const {
     glBindBuffer(GL_ARRAY_BUFFER, m_SceneVBO);
-    glBufferStorage(GL_ARRAY_BUFFER, m_data.vertexBuffer.size() * sizeof(Vertex3f3f2f),
-                    m_data.vertexBuffer.data(), 0);
+    glBufferStorage(GL_ARRAY_BUFFER, m_data.vertexBuffer.size() * sizeof(Vertex3f3f2f), m_data.vertexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
