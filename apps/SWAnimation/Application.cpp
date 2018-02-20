@@ -24,7 +24,7 @@ int Application::run() {
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
 
-        const auto projMatrix = perspective(70.f, float(m_nWindowWidth) / m_nWindowHeight,
+        const auto projMatrix = perspective(glm::radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
                                             0.01f * m_SceneSizeLength, m_SceneSizeLength);
         const auto viewMatrix = m_viewController.getViewMatrix();
         const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
@@ -311,9 +311,9 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto modelMatrix = mat4();
-    //const auto mvMatrix = viewMatrix * modelMatrix;
-    auto mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
-    mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
+    auto mvMatrix = viewMatrix * modelMatrix;
+//    auto mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+    //mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
     auto mvpMatrix = projMatrix * mvMatrix;
     auto normalMatrix = transpose(inverse(mvMatrix));
 
@@ -337,23 +337,23 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
 
     // todo -> modif les matrices selon l'objet affiché
     uint32_t offset = 0;
-    int j=0;
+    int j = 0;
     for (int i = 0; i < m_data.shapeCount; ++i) {
-        if (i>0 && i<2) {
-            // todo -> utilisé le tableau d'indice m_tabIndexShape
-            // Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
-            mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
-            mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, 1));
-            mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
-            mvpMatrix = projMatrix * mvMatrix;
-            normalMatrix = transpose(inverse(mvMatrix));
-        }
+//        if (i>0 && i<2) {
+//            // todo -> utilisé le tableau d'indice m_tabIndexShape
+//            // Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
+//            mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
+//            mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, 1));
+//            mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
+//            mvpMatrix = projMatrix * mvMatrix;
+//            normalMatrix = transpose(inverse(mvMatrix));
+//        }
         glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
         glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
         glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
 
         auto materialId = m_data.materialIDPerShape[i];
-        const auto &material = m_data.materials[materialId];
+        const auto &material = materialId >= 0 ? m_data.materials[materialId] : m_DefaultMaterial;
         setMaterial(material);
         int val = m_data.indexCountPerShape[i];
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
@@ -368,19 +368,21 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
 }
 
 void Application::setMaterial(const ObjData::PhongMaterial &material) const {
+
     glUniform3fv(m_uKaLocation, 1, value_ptr(material.Ka));
     glUniform3fv(m_uKdLocation, 1, value_ptr(material.Kd));
     glUniform3fv(m_uKsLocation, 1, value_ptr(material.Ks));
     glUniform1fv(m_uShininessLocation, 1, &material.shininess);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : m_textureIds[material.KaTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId >= 0) ? m_textureIds[material.KaTextureId] : m_WhiteTexture);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : m_textureIds[material.KsTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId >= 0) ? m_textureIds[material.KsTextureId] : m_WhiteTexture);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : m_textureIds[material.KdTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId >= 0) ? m_textureIds[material.KdTextureId] : m_WhiteTexture);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : m_textureIds[material.shininessTextureId]);
+    glBindTexture(GL_TEXTURE_2D,
+                  (material.shininessTextureId >= 0) ? m_textureIds[material.shininessTextureId] : m_WhiteTexture);
 
 }
 
@@ -436,12 +438,15 @@ void Application::initScene() {
     glGenBuffers(1, &m_SceneIBO);
 
     {
-        //const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
-        //loadObj(objPath, m_data, true);
+//        const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
+//        loadObjAndPushIndexShape(objPath);
         // todo -> charger tous les objets 3D à afficher
-        const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj";
-        loadObjAndPushIndexShape(objPath);
+        // todo -> trouver d'autres modeles
+//        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj"; -> Pas de texture
+//        loadObjAndPushIndexShape(objPath);
+        //auto objPath = m_AssetsRootPath / "glmlv" / "models" / "acclamatorCruiser" / "Republic_Assault_Ship.obj"; -> Segfault
 
+        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
@@ -451,7 +456,8 @@ void Application::initScene() {
         cout << "# of shapes    : " << m_data.shapeCount << endl;
         cout << "# of materials : " << m_data.materialCount << endl;
         cout << "# of vertex    : " << m_data.vertexBuffer.size() << endl;
-        cout << "# of triangles    : " << m_data.indexBuffer.size() / 3 << endl;
+        cout << "# of triangles : " << m_data.indexBuffer.size() / 3 << endl;
+        cout << "# of textures  : " << m_data.textures.size() << endl;
 
         // Fill VBO
         fillSceneVBO();
@@ -463,6 +469,8 @@ void Application::initScene() {
 
         // Upload all textures to the GPU
         generateAndBindAllTexture();
+
+        initDefaultMaterial();
     }
 
     // Fill VAO
@@ -474,7 +482,18 @@ void Application::initScene() {
     glSamplerParameteri(m_textureSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void Application::loadObjAndPushIndexShape( const fs::path& objPath) {
+void Application::initDefaultMaterial() {
+    m_DefaultMaterial.Ka = vec3(0);
+    m_DefaultMaterial.Kd = vec3(1);
+    m_DefaultMaterial.Ks = vec3(1);
+    m_DefaultMaterial.shininess = 32.f;
+    m_DefaultMaterial.KaTextureId = m_WhiteTexture;
+    m_DefaultMaterial.KdTextureId = m_WhiteTexture;
+    m_DefaultMaterial.KsTextureId = m_WhiteTexture;
+    m_DefaultMaterial.shininessTextureId = m_WhiteTexture;
+}
+
+void Application::loadObjAndPushIndexShape(const fs::path &objPath) {
     loadObj(objPath, m_data, true);
     m_tabIndexShape.push_back(m_data.shapeCount);
 }
