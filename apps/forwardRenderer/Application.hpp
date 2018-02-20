@@ -80,7 +80,7 @@ private:
 
     GLuint m_texture;
     ObjData m_data;
-    std::vector<GLuint> textureIds;
+    std::vector<GLuint> m_textureIds;
 
     glm::mat4 projMatrix;
 

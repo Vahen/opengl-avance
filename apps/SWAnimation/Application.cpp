@@ -337,8 +337,10 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
 
     // todo -> modif les matrices selon l'objet affiché
     uint32_t offset = 0;
+    int j=0;
     for (int i = 0; i < m_data.shapeCount; ++i) {
-        if (i == 1) {
+        if (i>0 && i<2) {
+            // todo -> utilisé le tableau d'indice m_tabIndexShape
             // Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
             mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
             mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, 1));
@@ -372,13 +374,13 @@ void Application::setMaterial(const ObjData::PhongMaterial &material) const {
     glUniform1fv(m_uShininessLocation, 1, &material.shininess);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : textureIds[material.KaTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : m_textureIds[material.KaTextureId]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : textureIds[material.KsTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : m_textureIds[material.KsTextureId]);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : textureIds[material.KdTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : m_textureIds[material.KdTextureId]);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : m_textureIds[material.shininessTextureId]);
 
 }
 
@@ -436,10 +438,11 @@ void Application::initScene() {
     {
         //const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
         //loadObj(objPath, m_data, true);
+        // todo -> charger tous les objets 3D à afficher
         const auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj";
-        loadObj(objPath, m_data, true);
-        loadObj(objPath, m_data, true);
+        loadObjAndPushIndexShape(objPath);
 
+        loadObjAndPushIndexShape(objPath);
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
         m_SceneSizeLength = glm::length(m_SceneSize);
@@ -469,6 +472,11 @@ void Application::initScene() {
     glGenSamplers(1, &m_textureSampler);
     glSamplerParameteri(m_textureSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(m_textureSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void Application::loadObjAndPushIndexShape( const fs::path& objPath) {
+    loadObj(objPath, m_data, true);
+    m_tabIndexShape.push_back(m_data.shapeCount);
 }
 
 void Application::fillSceneIBO() const {
@@ -525,10 +533,10 @@ void Application::createWhiteTexture() {
 }
 
 void Application::generateAndBindAllTexture() {
-    textureIds.resize(m_data.textures.size());
-    glGenTextures(m_data.textures.size(), textureIds.data());
-    for (auto i = 0; i < textureIds.size(); i++) {
-        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+    m_textureIds.resize(m_data.textures.size());
+    glGenTextures(m_data.textures.size(), m_textureIds.data());
+    for (auto i = 0; i < m_textureIds.size(); i++) {
+        glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, m_data.textures[i].width(), m_data.textures[i].height());
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_data.textures[i].width(), m_data.textures[i].height(), GL_RGBA,
                         GL_UNSIGNED_BYTE, m_data.textures[i].data());

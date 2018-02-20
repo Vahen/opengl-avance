@@ -98,7 +98,10 @@ private:
 
     // Required data about the scene in CPU in order to send draw calls
     ObjData m_data;
-    std::vector<GLuint> textureIds;
+    std::vector<GLuint> m_textureIds;
+    std::vector<int> m_tabIndexShape; // tableau d'int pour indiquer le nombre de shape par objet
+    // exemple : tabIndexShape[0] == 5 indique qu'il y a 5 shapeCount dans le 1er objet
+    // -> dans la boucle de rendu faire if(i
 
     glm::vec3 m_SceneSize = glm::vec3(0.f); // Used for camera speed and projection matrix parameters
     float m_SceneSizeLength = 0.f;
@@ -222,4 +225,6 @@ private:
                      const mat4 &dirLightProjMatrix) const;
 
     void GUIDisplay(float *clearColor);
+
+    void loadObjAndPushIndexShape(const fs::path& objPath);
 };

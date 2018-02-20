@@ -239,10 +239,10 @@ void Application::bindDataOnVAO() {
 }
 
 void Application::generateAndBindAllTexture() {
-    textureIds.resize(m_data.textures.size());
-    glGenTextures(m_data.textures.size(), textureIds.data());
-    for (auto i = 0; i < textureIds.size(); i++) {
-        glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+    m_textureIds.resize(m_data.textures.size());
+    glGenTextures(m_data.textures.size(), m_textureIds.data());
+    for (auto i = 0; i < m_textureIds.size(); i++) {
+        glBindTexture(GL_TEXTURE_2D, m_textureIds[i]);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, m_data.textures[i].width(), m_data.textures[i].height());
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_data.textures[i].width(), m_data.textures[i].height(), GL_RGBA,
                         GL_UNSIGNED_BYTE, m_data.textures[i].data());
@@ -389,13 +389,13 @@ void Application::setMaterial(const ObjData::PhongMaterial &material) const {
     glUniform1fv(uShininessLocation, 1, &material.shininess);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : textureIds[material.KaTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KaTextureId < 0) ? 0 : m_textureIds[material.KaTextureId]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : textureIds[material.KsTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KsTextureId < 0) ? 0 : m_textureIds[material.KsTextureId]);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : textureIds[material.KdTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.KdTextureId < 0) ? 0 : m_textureIds[material.KdTextureId]);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : textureIds[material.shininessTextureId]);
+    glBindTexture(GL_TEXTURE_2D, (material.shininessTextureId < 0) ? 0 : m_textureIds[material.shininessTextureId]);
 }
 
 Application::~Application() {
