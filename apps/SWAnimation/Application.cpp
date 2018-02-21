@@ -338,16 +338,24 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
     // todo -> modif les matrices selon l'objet affiché
     uint32_t offset = 0;
     int j = 0;
+	int countShapePassed = 0;
     for (int i = 0; i < m_data.shapeCount; ++i) {
-//        if (i>0 && i<2) {
-//            // todo -> utilisé le tableau d'indice m_tabIndexShape
-//            // Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
-//            mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
-//            mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, 1));
-//            mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
-//            mvpMatrix = projMatrix * mvMatrix;
-//            normalMatrix = transpose(inverse(mvMatrix));
-//        }
+		if (i-countShapePassed >= m_tabIndexShape[j]) {
+			countShapePassed += m_tabIndexShape[j];
+			j++;
+		}
+
+        // todo -> utilisé le tableau d'indice m_tabIndexShape
+		// Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
+
+        mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
+        mvMatrix = glm::translate(mvMatrix, glm::vec3(0, 0, j+1));
+        mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
+        mvpMatrix = projMatrix * mvMatrix;
+        normalMatrix = transpose(inverse(mvMatrix));
+
+
+
         glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
         glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
         glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
