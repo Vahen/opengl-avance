@@ -444,9 +444,9 @@ void Application::initScene() {
         // todo -> trouver d'autres modeles
 //        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj"; -> Pas de texture
 //        loadObjAndPushIndexShape(objPath);
-        //auto objPath = m_AssetsRootPath / "glmlv" / "models" / "acclamatorCruiser" / "Republic_Assault_Ship.obj"; -> Segfault
 
         auto objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
+        loadObjAndPushIndexShape(objPath);
         loadObjAndPushIndexShape(objPath);
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
@@ -494,8 +494,14 @@ void Application::initDefaultMaterial() {
 }
 
 void Application::loadObjAndPushIndexShape(const fs::path &objPath) {
+    int oldVal = m_data.shapeCount;
     loadObj(objPath, m_data, true);
-    m_tabIndexShape.push_back(m_data.shapeCount);
+    if(oldVal > 0){
+        m_tabIndexShape.push_back(m_data.shapeCount-oldVal);
+    }
+    else{
+        m_tabIndexShape.push_back(m_data.shapeCount);
+    }
 }
 
 void Application::fillSceneIBO() const {
