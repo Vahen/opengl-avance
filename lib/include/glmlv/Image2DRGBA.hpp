@@ -68,7 +68,8 @@ private:
         void operator ()(unsigned char *) const;
     };
 
-    std::unique_ptr<unsigned char[], Deleter> m_pData;
+//    std::unique_ptr<unsigned char[], Deleter> m_pData;
+    std::shared_ptr<unsigned char[]> m_pData; // todo -> Tester
     size_t m_nWidth = 0;
     size_t m_nHeight = 0;
 };

@@ -12,7 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/io.hpp>
-
+#include <glm/gtx/matrix_interpolation.hpp>
 using namespace glmlv;
 using namespace glm;
 using namespace std;
@@ -337,6 +337,8 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     uint32_t offset = 0;
     int j = 0;
     int countShapePassed = 0;
+
+    vec3 test = vec3(10,10,10);
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
             countShapePassed += m_tabIndexShape[j];
@@ -348,13 +350,17 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
                 //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
                 //cout << mvMatrix << endl;
                 //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
-                mvMatrix = glm::translate(mvMatrix,m_coordAWing1Test);
+
+                mvMatrix = glm::interpolate(mvMatrix,glm::translate(mvMatrix,m_coordAWing1Test),0.001f);
+                // todo -> Se servir de l'interpolation pour regler la vitesse et avoir un mouvement fluide
+                //cout << "Interpolation ->" << mvMatrix << endl;
                 break;
             case 1: // A-Wing 1
                 mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                mvMatrix = glm::translate(mvMatrix,m_coordAWing1Test);
+                mvMatrix = glm::interpolate(mvMatrix,glm::translate(mvMatrix,m_coordAWing1Test),0.001f);
+                mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0)),1.f);
                 //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
-                //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+//                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
                 break;
             case 2: // A-Wing 2
                 mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
@@ -370,9 +376,7 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
         auto mvpMatrix = projMatrix * mvMatrix;
         auto normalMatrix = transpose(inverse(mvMatrix));
 
-        glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
-        glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
-        glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
+        sendMatrixInformation(mvMatrix, mvpMatrix, normalMatrix);
 
         auto materialId = m_data.materialIDPerShape[i];
         const auto &material = materialId >= 0 ? m_data.materials[materialId] : m_DefaultMaterial;
@@ -387,6 +391,12 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
 
     glBindVertexArray(0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+void Application::sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const {
+    glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
+    glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
+    glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
 }
 
 void Application::setMaterial(const ObjData::PhongMaterial &material) const {
@@ -467,8 +477,15 @@ void Application::initScene() {
 //        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj"; -> Pas de texture
 
 //        loadObjAndPushIndexShape(objPath);
+
+        // todo -> Ajouter les informations relativent à chaque objet
+        // Utiliser les courbes de bezier pour la trajectoire
+        // https://stackoverflow.com/questions/785097/how-do-i-implement-a-b%c3%a9zier-curve-in-c#11435243
+
+
         auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" / "star_wars_star_destroyer.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
+
 
         objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
@@ -725,7 +742,7 @@ void Application::initScreenTriangle() {
 void Application::updateObjectsMovement() {
     // todo -> Ici faire la maj sur les mouvement des objets graces au modification sur leur transformations
     // code de test pour le deplacement
-    m_coordAWing1Test = m_coordAWing1Test + vec3(0,0,0.01f);
+    m_coordAWing1Test = m_coordAWing1Test + vec3(0,0,1.f);
 
     // for(auto obj:listObj):
     //    mettre a jour les coord pour déplacement

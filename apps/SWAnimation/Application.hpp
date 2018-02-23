@@ -242,4 +242,6 @@ private:
     void initDefaultMaterial() ;
 
     void updateObjectsMovement();
+
+    void sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const;
 };
