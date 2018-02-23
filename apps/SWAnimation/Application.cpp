@@ -20,6 +20,7 @@ using namespace std;
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
 
+    m_viewController.setPosition(m_SceneCenter);
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
@@ -138,6 +139,8 @@ void Application::GUIDisplay(float *clearColor) {
     }
 
     ImGui::InputFloat("MovementSpeed", &m_speed);
+    auto cameraPos =  m_viewController.getM_position();
+    ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
     ImGui::End();
 }
 
@@ -310,14 +313,7 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
     glViewport(0, 0, m_nWindowWidth, m_nWindowHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    auto modelMatrix = mat4();
-    auto mvMatrix = viewMatrix * modelMatrix;
-    auto mvpMatrix = projMatrix * mvMatrix;
-    auto normalMatrix = transpose(inverse(mvMatrix));
-
-    glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
-    glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
-    glUniformMatrix4fv(m_uNormalMatrixLocation, 1, GL_FALSE, value_ptr(normalMatrix));
+;
 
     // Same sampler for all texture units
     glBindSampler(0, m_textureSampler);
@@ -336,23 +332,38 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
     // todo -> modif les matrices selon l'objet affiché
     uint32_t offset = 0;
     int j = 0;
-	int countShapePassed = 0;
+    int countShapePassed = 0;
     for (int i = 0; i < m_data.shapeCount; ++i) {
-		if (i-countShapePassed >= m_tabIndexShape[j]) {
-			countShapePassed += m_tabIndexShape[j];
-			j++;
-		}
+        if (i - countShapePassed >= m_tabIndexShape[j]) {
+            countShapePassed += m_tabIndexShape[j];
+            j++;
+        }
+        auto mvMatrix = viewMatrix ;
+        switch (j) {
+            case 0: // star destroyer
+                //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
+                //cout << mvMatrix << endl;
+                //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
+                break;
+            case 1: // A-Wing 1
+                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
+                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+                //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+                break;
+            case 2: // A-Wing 2
+                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
+                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
+                break;
+            case 3: // A-Wing 3
+                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
+                break;
+            default:
+                break;
+        }
+//        auto mvMatrix = glm::translate(viewMatrix,m_SceneCenter) ;
 
-        // todo -> utilisé le tableau d'indice m_tabIndexShape
-		// Depend du nombre de shape -> toujours savoir le nb shape de chaque objet et placer les modif de matrix au bon moment
-
-        //mvMatrix = glm::rotate(viewMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 0, 1));
-        mvMatrix = glm::translate(viewMatrix, glm::vec3(0, 0,j+1));
-        mvMatrix = glm::scale(mvMatrix, glm::vec3(0.1, 0.1, 0.1));
-        mvpMatrix = projMatrix * mvMatrix;
-        normalMatrix = transpose(inverse(mvMatrix));
-
-
+        auto mvpMatrix = projMatrix * mvMatrix;
+        auto normalMatrix = transpose(inverse(mvMatrix));
 
         glUniformMatrix4fv(m_uModelViewProjMatrixLocation, 1, GL_FALSE, value_ptr(mvpMatrix));
         glUniformMatrix4fv(m_uModelViewMatrixLocation, 1, GL_FALSE, value_ptr(mvMatrix));
@@ -449,12 +460,17 @@ void Application::initScene() {
         // todo -> charger tous les objets 3D à afficher
         // todo -> trouver d'autres modeles
 //        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj"; -> Pas de texture
-//        loadObjAndPushIndexShape(objPath);
 
-        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
+//        loadObjAndPushIndexShape(objPath);
+        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" /
+                       "star_wars_star_destroyer.obj"; //-> Fonctionne
+        loadObjAndPushIndexShape(objPath);
+
+        objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
         loadObjAndPushIndexShape(objPath);
         loadObjAndPushIndexShape(objPath);
+
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
         m_SceneSizeLength = glm::length(m_SceneSize);
@@ -465,6 +481,8 @@ void Application::initScene() {
         cout << "# of vertex    : " << m_data.vertexBuffer.size() << endl;
         cout << "# of triangles : " << m_data.indexBuffer.size() / 3 << endl;
         cout << "# of textures  : " << m_data.textures.size() << endl;
+        cout << "Center of scene : " << m_SceneCenter << endl;
+        cout << "SceneSize length : " << m_SceneSizeLength << endl;
 
         // Fill VBO
         fillSceneVBO();
@@ -503,10 +521,9 @@ void Application::initDefaultMaterial() {
 void Application::loadObjAndPushIndexShape(const fs::path &objPath) {
     int oldVal = m_data.shapeCount;
     loadObj(objPath, m_data, true);
-    if(oldVal > 0){
-        m_tabIndexShape.push_back(m_data.shapeCount-oldVal);
-    }
-    else{
+    if (oldVal > 0) {
+        m_tabIndexShape.push_back(m_data.shapeCount - oldVal);
+    } else {
         m_tabIndexShape.push_back(m_data.shapeCount);
     }
 }

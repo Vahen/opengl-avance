@@ -7,10 +7,10 @@ struct GLFWwindow;
 
 namespace glmlv {
 
-class ViewController {
+    class ViewController {
     public:
-        ViewController(GLFWwindow* window, float speed = 1.f) :
-            m_pWindow(window), m_fSpeed(speed) {
+        ViewController(GLFWwindow *window, float speed = 1.f) :
+                m_pWindow(window), m_fSpeed(speed) {
         }
 
         void setSpeed(float speed) {
@@ -32,27 +32,40 @@ class ViewController {
 
         bool update(float elapsedTime);
 
-        void setViewMatrix(const glm::mat4& viewMatrix) {
+        void setViewMatrix(const glm::mat4 &viewMatrix) {
             m_ViewMatrix = viewMatrix;
             m_RcpViewMatrix = glm::inverse(viewMatrix);
         }
 
-        const glm::mat4& getViewMatrix() const {
+        const glm::mat4 &getViewMatrix() const {
             return m_ViewMatrix;
         }
 
-        const glm::mat4& getRcpViewMatrix() const {
+        const glm::mat4 &getRcpViewMatrix() const {
             return m_RcpViewMatrix;
         }
 
+        void setPosition(glm::vec3 position){
+            m_position = position;
+            auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
+            auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
+            auto upVector = cross(frontVector, leftVector);
+            setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
+        }
+
+        const glm::vec3 &getM_position() const {
+            return m_position;
+        }
+
     private:
-        GLFWwindow* m_pWindow = nullptr;
+        GLFWwindow *m_pWindow = nullptr;
         float m_fSpeed = 0.f;
         bool m_LeftButtonPressed = false;
         glm::dvec2 m_LastCursorPosition;
 
         glm::mat4 m_ViewMatrix = glm::mat4(1);
         glm::mat4 m_RcpViewMatrix = glm::mat4(1);
+        glm::vec3 m_position = glm::vec3();
     };
 
 }
