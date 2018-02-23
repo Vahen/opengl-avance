@@ -20,6 +20,9 @@ using namespace std;
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
 
+    // todo -> Changer la position de base de la camera une fois l'animation défini
+    // Définir une trajectoire pour la camera -> modif le viewController pour rajouter des fonctions pour que camera puisse bouger librement sans controle humain
+
     m_viewController.setPosition(m_SceneCenter);
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
@@ -57,6 +60,9 @@ int Application::run() {
         // Geometry pass
         {
             m_geometryPassProgram.use();
+
+            updateObjectsMovement();
+
             geometryPass(projMatrix, viewMatrix);
         }
 
@@ -307,13 +313,11 @@ void Application::shadingPass(const mat4 &viewMatrix, const mat4 &rcpViewMatrix,
     glBindVertexArray(0);
 }
 
-void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) const {
+void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_GBufferFBO);
 
     glViewport(0, 0, m_nWindowWidth, m_nWindowHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-;
 
     // Same sampler for all texture units
     glBindSampler(0, m_textureSampler);
@@ -344,15 +348,17 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
                 //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
                 //cout << mvMatrix << endl;
                 //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
+                mvMatrix = glm::translate(mvMatrix,m_coordAWing1Test);
                 break;
             case 1: // A-Wing 1
                 mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+                mvMatrix = glm::translate(mvMatrix,m_coordAWing1Test);
+                //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
                 //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
                 break;
             case 2: // A-Wing 2
                 mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
+                //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
                 break;
             case 3: // A-Wing 3
                 mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
@@ -361,7 +367,6 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) c
                 break;
         }
 //        auto mvMatrix = glm::translate(viewMatrix,m_SceneCenter) ;
-
         auto mvpMatrix = projMatrix * mvMatrix;
         auto normalMatrix = transpose(inverse(mvMatrix));
 
@@ -462,8 +467,7 @@ void Application::initScene() {
 //        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "tieFighter" / "TieFighter.obj"; -> Pas de texture
 
 //        loadObjAndPushIndexShape(objPath);
-        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" /
-                       "star_wars_star_destroyer.obj"; //-> Fonctionne
+        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" / "star_wars_star_destroyer.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
 
         objPath = m_AssetsRootPath / "glmlv" / "models" / "A_Wing" / "Star_Wars_A_Wing.obj"; //-> Fonctionne
@@ -716,5 +720,15 @@ void Application::initScreenTriangle() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+void Application::updateObjectsMovement() {
+    // todo -> Ici faire la maj sur les mouvement des objets graces au modification sur leur transformations
+    // code de test pour le deplacement
+    m_coordAWing1Test = m_coordAWing1Test + vec3(0,0,0.01f);
+
+    // for(auto obj:listObj):
+    //    mettre a jour les coord pour déplacement
+
 }
 

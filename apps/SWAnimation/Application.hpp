@@ -36,6 +36,11 @@ enum DisplayType {
     Display_Count
 };
 
+// todo -> peut etre utile pour stocker toutes les info d'un objet pour l'affichage
+struct shapeInfo{
+
+};
+
 class Application {
 public:
     Application(int argc, char **argv);
@@ -104,6 +109,10 @@ private:
     // -> dans la boucle de rendu faire if(i
     ObjData::PhongMaterial m_DefaultMaterial;
 
+    ///////////////////////////////////////////
+    // Test des positionnement
+    glm::vec3 m_coordAWing1Test = vec3();
+    ///////////////////////////////////////////
 
     glm::vec3 m_SceneSize = glm::vec3(0.f); // Used for camera speed and projection matrix parameters
     float m_SceneSizeLength = 0.f;
@@ -183,7 +192,7 @@ private:
     bool m_directionalSMResolutionDirty = false;
     bool m_directionalSMDirty = true;
 
-    void geometryPass(const glm::mat4 &projMatrix, const glm::mat4 &viewMatrix) const;
+    void geometryPass(const glm::mat4 &projMatrix, const glm::mat4 &viewMatrix);
 
     void shadingPass(const glm::mat4 &viewMatrix, const glm::mat4 &rcpViewMatrix,
                      const glm::mat4 &dirLightViewMatrix, const glm::mat4 &dirLightProjMatrix) const;
@@ -231,4 +240,6 @@ private:
     void loadObjAndPushIndexShape(const fs::path& objPath);
 
     void initDefaultMaterial() ;
+
+    void updateObjectsMovement();
 };
