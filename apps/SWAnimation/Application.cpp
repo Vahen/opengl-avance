@@ -13,6 +13,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/matrix_interpolation.hpp>
+
+#include <chrono>
+
+using Clock=std::chrono::high_resolution_clock;
 using namespace glmlv;
 using namespace glm;
 using namespace std;
@@ -20,6 +24,7 @@ using namespace std;
 int Application::run() {
     float clearColor[3] = {0, 0, 0};
 
+    startTime = Clock::now();
     // todo -> Changer la position de base de la camera une fois l'animation défini
     // Définir une trajectoire pour la camera -> modif le viewController pour rajouter des fonctions pour que camera puisse bouger librement sans controle humain
 
@@ -60,8 +65,6 @@ int Application::run() {
         // Geometry pass
         {
             m_geometryPassProgram.use();
-
-            updateObjectsMovement();
 
             geometryPass(projMatrix, viewMatrix);
         }
@@ -145,7 +148,7 @@ void Application::GUIDisplay(float *clearColor) {
     }
 
     ImGui::InputFloat("MovementSpeed", &m_speed);
-    auto cameraPos =  m_viewController.getM_position();
+    auto cameraPos = m_viewController.getM_position();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
     ImGui::End();
 }
@@ -338,40 +341,97 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     int j = 0;
     int countShapePassed = 0;
 
-    vec3 test = vec3(10,10,10);
+    vec3 test = vec3(10, 10, 10);
+    auto now = Clock::now();
+    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
+    cout << "Time elapsed = " << timeElapsed.count() << " seconds" << endl;
+    auto time = timeElapsed.count();
+
+    auto firstPart = time < 30. && time > 0;
+    auto secondPart = time < 20. && time > 10;
+    auto thirdPart = time < 30. && time > 20;
+    auto fourthPart = time < 40. && time > 30;
+    auto fifthPart = time < 50. && time > 40;
+    auto sixthPart = time < 60. && time > 50;
+    if (firstPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+    // vec3(0,1,1) -> monte en vertical
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
             countShapePassed += m_tabIndexShape[j];
             j++;
         }
-        auto mvMatrix = viewMatrix ;
-        switch (j) {
-            case 0: // star destroyer
-                //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
-                //cout << mvMatrix << endl;
-                //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
+        auto mvMatrix = viewMatrix;
+        if (firstPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
+                    //cout << mvMatrix << endl;
+                    //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
 
-                mvMatrix = glm::interpolate(mvMatrix,glm::translate(mvMatrix,m_coordAWing1Test),0.001f);
-                // todo -> Se servir de l'interpolation pour regler la vitesse et avoir un mouvement fluide
-                //cout << "Interpolation ->" << mvMatrix << endl;
-                break;
-            case 1: // A-Wing 1
-                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                mvMatrix = glm::interpolate(mvMatrix,glm::translate(mvMatrix,m_coordAWing1Test),0.001f);
-                mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0)),1.f);
-                //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
+                    mvMatrix = firstPartBigShip(mvMatrix);
+                    // todo -> Se servir de l'interpolation pour regler la vitesse et avoir un mouvement fluide
+                    //cout << "Interpolation ->" << mvMatrix << endl;
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = firstPartAWing1(mvMatrix);
+
+                    //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
 //                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
-                break;
-            case 2: // A-Wing 2
-                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
-                break;
-            case 3: // A-Wing 3
-                mvMatrix = glm::translate(mvMatrix,m_SceneCenter);
-                break;
-            default:
-                break;
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = firstPartAWing2(mvMatrix);
+                    //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = firstPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
         }
+        if (secondPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
+                    //cout << mvMatrix << endl;
+                    //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
+
+                    mvMatrix = secondPartBigShip(mvMatrix);
+                    // todo -> Se servir de l'interpolation pour regler la vitesse et avoir un mouvement fluide
+                    //cout << "Interpolation ->" << mvMatrix << endl;
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = firstPartAWing1(mvMatrix);
+
+                    //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
+//                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = firstPartAWing2(mvMatrix);
+                    //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = firstPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (thirdPart) {
+
+        }
+        if (fourthPart) {
+
+        }
+        if (fifthPart) {
+
+        }
+        if (sixthPart) {
+
+        }
+
 //        auto mvMatrix = glm::translate(viewMatrix,m_SceneCenter) ;
         auto mvpMatrix = projMatrix * mvMatrix;
         auto normalMatrix = transpose(inverse(mvMatrix));
@@ -391,6 +451,35 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
 
     glBindVertexArray(0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+mat4 &Application::secondPartBigShip(mat4 &mvMatrix) {
+    mvMatrix = firstPartBigShip(mvMatrix);
+    return mvMatrix;
+}
+
+mat4 &Application::firstPartAWing1(mat4 &mvMatrix) {
+    mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1Test), 0.01f);
+    mvMatrix = glm::interpolate(mvMatrix,
+                                glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0)),
+                                1.f);
+    return mvMatrix;
+}
+
+mat4 &Application::firstPartAWing3(mat4 &mvMatrix) {
+    mvMatrix = translate(mvMatrix, m_SceneCenter);
+    return mvMatrix;
+}
+
+mat4 &Application::firstPartAWing2(mat4 &mvMatrix) {
+    mvMatrix = translate(mvMatrix, m_SceneCenter);
+    return mvMatrix;
+}
+
+mat4 &Application::firstPartBigShip(mat4 &mvMatrix) {
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1Test), 0.01f);
+    return mvMatrix;
 }
 
 void Application::sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const {
@@ -483,7 +572,8 @@ void Application::initScene() {
         // https://stackoverflow.com/questions/785097/how-do-i-implement-a-b%c3%a9zier-curve-in-c#11435243
 
 
-        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" / "star_wars_star_destroyer.obj"; //-> Fonctionne
+        auto objPath = m_AssetsRootPath / "glmlv" / "models" / "StarDestroyer" /
+                       "star_wars_star_destroyer.obj"; //-> Fonctionne
         loadObjAndPushIndexShape(objPath);
 
 
@@ -739,13 +829,5 @@ void Application::initScreenTriangle() {
     glBindVertexArray(0);
 }
 
-void Application::updateObjectsMovement() {
-    // todo -> Ici faire la maj sur les mouvement des objets graces au modification sur leur transformations
-    // code de test pour le deplacement
-    m_coordAWing1Test = m_coordAWing1Test + vec3(0,0,1.f);
 
-    // for(auto obj:listObj):
-    //    mettre a jour les coord pour déplacement
-
-}
 

@@ -9,6 +9,8 @@
 #include <glm/glm.hpp>
 
 #include <limits>
+#include <chrono>
+
 
 using namespace glmlv;
 using namespace glm;
@@ -34,11 +36,6 @@ enum DisplayType {
     Display_GDepth,
     Display_DirectionalLightDepthMap,
     Display_Count
-};
-
-// todo -> peut etre utile pour stocker toutes les info d'un objet pour l'affichage
-struct shapeInfo{
-
 };
 
 class Application {
@@ -237,11 +234,21 @@ private:
 
     void GUIDisplay(float *clearColor);
 
-    void loadObjAndPushIndexShape(const fs::path& objPath);
+    void loadObjAndPushIndexShape(const fs::path &objPath);
 
-    void initDefaultMaterial() ;
-
-    void updateObjectsMovement();
+    void initDefaultMaterial();
 
     void sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const;
+
+    std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
+
+    mat4 &firstPartBigShip(mat4 &mvMatrix);
+
+    mat4 &firstPartAWing2(mat4 &mvMatrix);
+
+    mat4 &firstPartAWing3(mat4 &mvMatrix);
+
+    mat4 &firstPartAWing1(mat4 &mvMatrix);
+
+    mat4 &secondPartBigShip(mat4 &mvMatrix);
 };
