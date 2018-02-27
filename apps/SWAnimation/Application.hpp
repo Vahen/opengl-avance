@@ -109,6 +109,9 @@ private:
     ///////////////////////////////////////////
     // Test des positionnement
     glm::vec3 m_coordAWing1Test = vec3();
+
+    float m_RotationSpeed = 0.01f;
+    float m_speed = 0.01f;
     ///////////////////////////////////////////
 
     glm::vec3 m_SceneSize = glm::vec3(0.f); // Used for camera speed and projection matrix parameters
@@ -185,7 +188,7 @@ private:
     GLuint m_directionalSMTexture;
     int32_t m_nDirectionalSMResolution = 4096;
 
-    float m_speed = 0.01f;
+
     bool m_directionalSMResolutionDirty = false;
     bool m_directionalSMDirty = true;
 

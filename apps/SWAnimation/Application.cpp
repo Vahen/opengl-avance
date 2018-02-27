@@ -148,6 +148,7 @@ void Application::GUIDisplay(float *clearColor) {
     }
 
     ImGui::InputFloat("MovementSpeed", &m_speed);
+    ImGui::InputFloat("RotationSpeed", &m_RotationSpeed);
     auto cameraPos = m_viewController.getM_position();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
     ImGui::End();
@@ -353,9 +354,28 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     auto fourthPart = time < 40. && time > 30;
     auto fifthPart = time < 50. && time > 40;
     auto sixthPart = time < 60. && time > 50;
+
+
     if (firstPart) {
         m_coordAWing1Test += vec3(1, -1, 1);
     }
+    if (secondPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+    if (thirdPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+    if (fourthPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+    if (fifthPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+    if (sixthPart) {
+        m_coordAWing1Test += vec3(1, -1, 1);
+    }
+
+
     // vec3(0,1,1) -> monte en vertical
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
@@ -850,16 +870,17 @@ void Application::initScreenTriangle() {
 ////////////////////////////////////////////////////////////////////////////
 
 mat4 &Application::firstPartBigShip(mat4 &mvMatrix) {
-    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1Test), 0.01f);
+
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1Test), m_speed);
     return mvMatrix;
 }
 
 mat4 &Application::firstPartAWing1(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1Test), 0.01f);
-    mvMatrix = glm::interpolate(mvMatrix,
-                                glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0)),
-                                1.f);
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1Test), m_speed);
+//    mvMatrix = glm::interpolate(mvMatrix,
+//                                glm::rotate(mvMatrix, static_cast<float>(m_RotationSpeed * glfwGetTime()), glm::vec3(0, 1, 0)),
+//                                1.f);
     return mvMatrix;
 }
 
