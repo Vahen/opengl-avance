@@ -238,24 +238,37 @@ void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &di
         }
         auto transformMatrix = mat4();
         switch (j) {
+            // todo -> Ajouter les rotations
             case 1:
                 transformMatrix = glm::translate(transformMatrix,m_coordBigShip);
 //                transformMatrix = glm::translate(transformMatrix,m_coordBigShip);
 //                glUniformMatrix4fv(m_uDirLightViewProjMatrix, 1, GL_FALSE, value_ptr(
 //                        dirLightProjMatrix * dirLightViewMatrix *
 //                        m_coordBigShip));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.x,vec3(-1,0,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.y,vec3(0,1,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.z,vec3(0,0,-1));
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 2:
                 transformMatrix = glm::translate(transformMatrix,m_coordAWing1);
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.x,vec3(-1,0,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.y,vec3(0,1,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.z,vec3(0,0,-1));
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 3:
                 transformMatrix = glm::translate(transformMatrix,m_coordAWing2);
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing2.x,vec3(-1,0,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing2.y,vec3(0,1,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.z,vec3(0,0,-1));
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 4:
                 transformMatrix = glm::translate(transformMatrix,m_coordAWing3);
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.x,vec3(-1,0,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.y,vec3(0,1,0));
+                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.z,vec3(0,0,-1));
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
         }
