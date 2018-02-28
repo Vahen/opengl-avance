@@ -47,19 +47,21 @@ int Application::run() {
         const auto dirLightProjMatrix = ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius,
                                               0.01f * sceneRadius, 2.f * sceneRadius);
 
+        updateShipMovements();
+
         // Shadow map computation if necessary
         {
-            if (m_directionalSMResolutionDirty) {
-                cleanShadowMap();
-                m_directionalSMResolutionDirty = false;
-                m_directionalSMDirty = true; // The shadow map must also be recomputed
-            }
+//            if (m_directionalSMResolutionDirty) {
+//                cleanShadowMap();
+//                m_directionalSMResolutionDirty = false;
+//                m_directionalSMDirty = true; // The shadow map must also be recomputed
+//            }
 
-            if (m_directionalSMDirty) {
-                m_directionalSMProgram.use();
-                computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
-                m_directionalSMDirty = false;
-            }
+//            if (m_directionalSMDirty) {
+            m_directionalSMProgram.use();
+            computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
+//                m_directionalSMDirty = false;
+//            }
         }
 
         // Geometry pass
@@ -216,7 +218,7 @@ void Application::cleanShadowMap() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) const {
+void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_directionalSMFBO);
     glViewport(0, 0, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -224,51 +226,42 @@ void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &di
 //    glUniformMatrix4fv(m_uDirLightViewProjMatrix, 1, GL_FALSE,
 //                       value_ptr(dirLightProjMatrix * dirLightViewMatrix));
 // todo Ajouter les transformations des objets
-
+//    auto transformMatrix = mat4(1.f);
+//    transformMatrix = moveBigShip(transformMatrix);
+//    sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
     glBindVertexArray(m_SceneVAO);
 
     // We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
     uint32_t offset = 0;
     int j = 0;
     int countShapePassed = 0;
+    auto send = true;
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
             countShapePassed += m_tabIndexShape[j];
             j++;
+            send = true;
         }
-        auto transformMatrix = mat4();
+        auto transformMatrix = mat4(1.f);
         switch (j) {
-            // todo -> Ajouter les rotations
             case 0:
-                transformMatrix = translate(transformMatrix,m_coordBigShip);
-                transformMatrix = rotate(transformMatrix,m_RotationBigShip.x,rotateOnX);
-                transformMatrix = rotate(transformMatrix,m_RotationBigShip.y,rotateOnY);
-                transformMatrix = rotate(transformMatrix,m_RotationBigShip.z,rotateOnZ);
-                sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
+                transformMatrix = moveBigShip(transformMatrix);
                 break;
             case 1:
-                transformMatrix = translate(transformMatrix,m_coordAWing1);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing1.x,rotateOnX);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing1.y,rotateOnY);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing1.z,rotateOnZ);
-                sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
+                transformMatrix = moveAWing1(transformMatrix);
                 break;
             case 2:
-                transformMatrix = translate(transformMatrix,m_coordAWing2);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing2.x,rotateOnX);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing2.y,rotateOnY);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing3.z,rotateOnZ);
-                sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
+                transformMatrix = moveAWing2(transformMatrix);
                 break;
             case 3:
-                transformMatrix = translate(transformMatrix,m_coordAWing3);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing3.x,rotateOnX);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing3.y,rotateOnY);
-                transformMatrix = rotate(transformMatrix,m_RotationAWing3.z,rotateOnZ);
-                sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
+                transformMatrix = moveAWing3(transformMatrix);
                 break;
             default:
                 break;
+        }
+        if (send) {
+            sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
+            send = false;
         }
         int val = m_data.indexCountPerShape[i];
         glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
@@ -388,107 +381,6 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     uint32_t offset = 0;
     int j = 0;
     int countShapePassed = 0;
-
-    vec3 test = vec3(10, 10, 10);
-    auto now = Clock::now();
-    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
-    cout << "Time elapsed = " << timeElapsed.count() << " seconds" << endl;
-    auto time = timeElapsed.count();
-
-    auto firstPart = time < 10. && time > 0;
-    auto secondPart = time < 20. && time > 10;
-    auto thirdPart = time < 30. && time > 20;
-    auto fourthPart = time < 40. && time > 30;
-    auto fifthPart = time < 50. && time > 40;
-    auto sixthPart = time < 60. && time > 50;
-
-    // todo
-    // vec3(0,1,1) -> monte en vertical
-    vec3 up = vec3(0, 1, 1);
-    vec3 down = vec3(0, -1, -1);
-
-    vec3 front = vec3(-0.5, 0, 0.5);
-    vec3 back = vec3(0.5, 0, -1);
-
-    // Modif des vecteurs de translation et rotation
-    if (firstPart) {
-        m_coordBigShip += up;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (secondPart) {
-        m_coordBigShip += down;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (thirdPart) {
-        m_coordBigShip += front;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (fourthPart) {
-        m_coordBigShip += back;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (fifthPart) {
-        m_coordBigShip += vec3();
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (sixthPart) {
-        m_coordBigShip += vec3();
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
 
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
@@ -883,37 +775,139 @@ void Application::initScreenTriangle() {
 
 mat4 &Application::moveBigShip(mat4 &mvMatrix) {
 
-    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
+    mvMatrix = translate(mvMatrix, m_coordBigShip);
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.x), rotateOnX);
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.y), rotateOnY);
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.z), rotateOnZ);
 
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationBigShip.x, rotateOnX), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationBigShip.y,rotateOnY),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationBigShip.z,rotateOnZ),m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing1(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1), m_speed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.x,rotateOnX),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.y,rotateOnY),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.z,rotateOnZ),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing1.x, rotateOnX), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing1.y, rotateOnY), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing1.z, rotateOnZ), m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing2(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.x,rotateOnX),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.y,rotateOnY),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.z,rotateOnZ),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.x, rotateOnX), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.y, rotateOnY), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.z, rotateOnZ), m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing3(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing3), m_speed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.x,rotateOnX),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.y,rotateOnY),m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.z,rotateOnZ),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing3.x, rotateOnX), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing3.y, rotateOnY), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing3.z, rotateOnZ), m_RotationSpeed);
     return mvMatrix;
+}
+
+void Application::updateShipMovements() {
+    auto now = Clock::now();
+    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
+    cout << "Time elapsed = " << timeElapsed.count() << " seconds" << endl;
+    auto time = timeElapsed.count();
+
+    auto firstPart = time < 10. && time > 0;
+    auto secondPart = time < 20. && time > 10;
+    auto thirdPart = time < 30. && time > 20;
+    auto fourthPart = time < 40. && time > 30;
+    auto fifthPart = time < 50. && time > 40;
+    auto sixthPart = time < 60. && time > 50;
+
+    // todo
+    // vec3(0,1,1) -> monte en vertical
+    vec3 up = vec3(0, 1, 1);
+    vec3 down = vec3(0, -1, -1);
+
+    vec3 front = vec3(-0.5, 0, 0.5);
+    vec3 back = vec3(0.5, 0, -1);
+    // Modif des vecteurs de translation et rotation
+    if (firstPart) {
+        m_coordBigShip += m_speed * up;
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+    if (secondPart) {
+        m_coordBigShip += m_speed * down;
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+    if (thirdPart) {
+        m_coordBigShip += m_speed * front;
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+    if (fourthPart) {
+        m_coordBigShip += m_speed * back;
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+    if (fifthPart) {
+        m_coordBigShip += vec3();
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+    if (sixthPart) {
+        m_coordBigShip += vec3();
+        m_RotationBigShip += vec3();
+
+        m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
+        m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
+        m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
+    }
+
 }

@@ -239,7 +239,7 @@ private:
 
     void setMaterial(const ObjData::PhongMaterial &material) const;
 
-    void computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) const;
+    void computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix) ;
 
     void cleanShadowMap();
 
@@ -270,4 +270,6 @@ private:
     mat4 &moveAWing1(mat4 &mvMatrix);
 
     void sendLightProjInfo(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix, const mat4 &transformMatrix) const;
+
+    void updateShipMovements();
 };
