@@ -263,84 +263,13 @@ private:
 
     // Fonction pour les differentes partie de l'animations //
 
-    ////////////////////////////////////////////////////////////////////////////
-    ///////////////////////// First Part animation /////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    mat4 &firstPartBigShip(mat4 &mvMatrix);
+    mat4 &moveBigShip(mat4 &mvMatrix);
 
-    mat4 &firstPartAWing2(mat4 &mvMatrix);
+    mat4 &moveAWing2(mat4 &mvMatrix);
 
-    mat4 &firstPartAWing3(mat4 &mvMatrix);
+    mat4 &moveAWing3(mat4 &mvMatrix);
 
-    mat4 &firstPartAWing1(mat4 &mvMatrix);
-
-    ////////////////////////////////////////////////////////////////////////////
-    //////////////////////// Second Part animation /////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    mat4 &secondPartBigShip(mat4 &mvMatrix);
-
-    mat4 &secondPartAWing1(mat4 &mvMatrix);
-
-    mat4 &secondPartAWing2(mat4 &mvMatrix);
-
-    mat4 &secondPartAWing3(mat4 &mvMatrix);
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///////////////////////// Third Part animation /////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-
-    mat4 &thirdPartBigShip(mat4 &mvMatrix);
-
-    mat4 &thirdPartAWing1(mat4 &mvMatrix);
-
-    mat4 &thirdPartAWing2(mat4 &mvMatrix);
-
-    mat4 &thirdPartAWing3(mat4 &mvMatrix);
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///////////////////////// Fourth Part animation ////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    mat4 &fourthPartBigShip(mat4 &mvMatrix);
-
-    mat4 &fourthPartAWing1(mat4 &mvMatrix);
-
-    mat4 &fourthPartAWing2(mat4 &mvMatrix);
-
-    mat4 &fourthPartAWing3(mat4 &mvMatrix);
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///////////////////////// Fifth Part animation /////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    mat4 &fifthPartBigShip(mat4 &mvMatrix);
-
-    mat4 &fifthPartAWing1(mat4 &mvMatrix);
-
-    mat4 &fifthPartAWing2(mat4 &mvMatrix);
-
-    mat4 &fifthPartAWing3(mat4 &mvMatrix);
-
-    ////////////////////////////////////////////////////////////////////////////
-    ///////////////////////// Sixth Part animation /////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    mat4 &sixthPartBigShip(mat4 &mvMatrix);
-
-    mat4 &sixthPartAWing1(mat4 &mvMatrix);
-
-    mat4 &sixthPartAWing2(mat4 &mvMatrix);
-
-    mat4 &sixthPartAWing3(mat4 &mvMatrix);
-
-    mat4 &firstPartLoop(int j, bool firstPart, mat4 &mvMatrix);
-
-    mat4 &secondPartLoop(int j, bool secondPart, mat4 &mvMatrix);
-
-    mat4 &thirdPartLoop(int j, bool thirdPart, mat4 &mvMatrix);
-
-    mat4 &fourthPartLoop(int j, bool fourthPart, mat4 &mvMatrix);
-
-    mat4 &fifthPartLoop(int j, bool fifthPart, mat4 &mvMatrix);
-
-    mat4 &sixthPartLoop(int j, bool sixthPart, mat4 &mvMatrix);
+    mat4 &moveAWing1(mat4 &mvMatrix);
 
     void sendLightProjInfo(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix, const mat4 &transformMatrix) const;
 };
