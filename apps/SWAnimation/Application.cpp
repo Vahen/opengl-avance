@@ -33,7 +33,7 @@ int Application::run() {
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
 
-        const auto projMatrix = perspective(glm::radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
+        const auto projMatrix = perspective(radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
                                             0.01f * m_SceneSizeLength, m_SceneSizeLength);
         const auto viewMatrix = m_viewController.getViewMatrix();
         const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
@@ -240,31 +240,31 @@ void Application::computShadowMap(const mat4 &dirLightViewMatrix, const mat4 &di
         switch (j) {
             // todo -> Ajouter les rotations
             case 0:
-                transformMatrix = glm::translate(transformMatrix,m_coordBigShip);
-                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.x,vec3(-1,0,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.y,vec3(0,1,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationBigShip.z,vec3(0,0,-1));
+                transformMatrix = translate(transformMatrix,m_coordBigShip);
+                transformMatrix = rotate(transformMatrix,m_RotationBigShip.x,rotateOnX);
+                transformMatrix = rotate(transformMatrix,m_RotationBigShip.y,rotateOnY);
+                transformMatrix = rotate(transformMatrix,m_RotationBigShip.z,rotateOnZ);
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 1:
-                transformMatrix = glm::translate(transformMatrix,m_coordAWing1);
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.x,vec3(-1,0,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.y,vec3(0,1,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing1.z,vec3(0,0,-1));
+                transformMatrix = translate(transformMatrix,m_coordAWing1);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing1.x,rotateOnX);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing1.y,rotateOnY);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing1.z,rotateOnZ);
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 2:
-                transformMatrix = glm::translate(transformMatrix,m_coordAWing2);
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing2.x,vec3(-1,0,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing2.y,vec3(0,1,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.z,vec3(0,0,-1));
+                transformMatrix = translate(transformMatrix,m_coordAWing2);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing2.x,rotateOnX);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing2.y,rotateOnY);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing3.z,rotateOnZ);
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             case 3:
-                transformMatrix = glm::translate(transformMatrix,m_coordAWing3);
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.x,vec3(-1,0,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.y,vec3(0,1,0));
-                transformMatrix = glm::rotate(transformMatrix,m_RotationAWing3.z,vec3(0,0,-1));
+                transformMatrix = translate(transformMatrix,m_coordAWing3);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing3.x,rotateOnX);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing3.y,rotateOnY);
+                transformMatrix = rotate(transformMatrix,m_RotationAWing3.z,rotateOnZ);
                 sendLightProjInfo(dirLightViewMatrix, dirLightProjMatrix, transformMatrix);
                 break;
             default:
@@ -413,39 +413,81 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     // Modif des vecteurs de translation et rotation
     if (firstPart) {
         m_coordBigShip += up;
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
     if (secondPart) {
         m_coordBigShip += down;
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
     if (thirdPart) {
         m_coordBigShip += front;
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
     if (fourthPart) {
         m_coordBigShip += back;
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
     if (fifthPart) {
         m_coordBigShip += vec3();
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
     if (sixthPart) {
         m_coordBigShip += vec3();
+        m_RotationBigShip += vec3();
+
         m_coordAWing1 += vec3();
+        m_RotationAWing1 += vec3();
+
         m_coordAWing2 += vec3();
+        m_RotationAWing2 += vec3();
+
         m_coordAWing3 += vec3();
+        m_RotationAWing3 += vec3();
     }
 
     for (int i = 0; i < m_data.shapeCount; ++i) {
@@ -456,23 +498,15 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
         auto mvMatrix = viewMatrix;
         switch (j) {
             case 0: // star destroyer
-                //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
-                //cout << mvMatrix << endl;
-                //mvMatrix = glm::translate(mvMatrix,vec3(0,0,0));
 
                 mvMatrix = moveBigShip(mvMatrix);
-                // todo -> Se servir de l'interpolation pour regler la vitesse et avoir un mouvement fluide
-                //cout << "Interpolation ->" << mvMatrix << endl;
                 break;
             case 1: // A-Wing 1
                 mvMatrix = moveAWing1(mvMatrix);
-
-                //mvMatrix = glm::rotate(mvMatrix, radians(45.f), glm::vec3(0, 1, 0));
-//                mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(0, 1, 0));
+                //mvMatrix = rotate(mvMatrix, radians(45.f), vec3(0, 1, 0));
                 break;
             case 2: // A-Wing 2
                 mvMatrix = moveAWing2(mvMatrix);
-                //mvMatrix = glm::rotate(mvMatrix, static_cast<float>(m_speed * glfwGetTime()), glm::vec3(1, 0, 0));
                 break;
             case 3: // A-Wing 3
                 mvMatrix = moveAWing3(mvMatrix);
@@ -598,7 +632,7 @@ void Application::initScene() {
 
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
-        m_SceneSizeLength = glm::length(m_SceneSize);
+        m_SceneSizeLength = length(m_SceneSize);
         m_SceneCenter = 0.5f * (m_data.bboxMax + m_data.bboxMin);
 
         cout << "# of shapes    : " << m_data.shapeCount << endl;
@@ -843,45 +877,43 @@ void Application::initScreenTriangle() {
     glBindVertexArray(0);
 }
 
-////////////////////////////////////////////////////////////////////////////
-///////////////////////// First Part animation /////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+///////////////////////// Animation /////////////////////////////
+/////////////////////////////////////////////////////////////////
 
 mat4 &Application::moveBigShip(mat4 &mvMatrix) {
 
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationBigShip.x,vec3(-1,0,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationBigShip.y,vec3(0,1,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationBigShip.z,vec3(0,0,-1)),m_RotationSpeed);
+
+    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationBigShip.x, rotateOnX), m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationBigShip.y,rotateOnY),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationBigShip.z,rotateOnZ),m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing1(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1), m_speed);
-//    mvMatrix = glm::interpolate(mvMatrix,
-//                                glm::rotate(mvMatrix, static_cast<float>(m_RotationSpeed * glfwGetTime()), glm::vec3(0, 1, 0)),
-//                                1.f);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing1.x,vec3(-1,0,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing1.y,vec3(0,1,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing1.z,vec3(0,0,-1)),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1), m_speed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.x,rotateOnX),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.y,rotateOnY),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing1.z,rotateOnZ),m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing2(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing2), m_speed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing2.x,vec3(-1,0,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing2.y,vec3(0,1,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing2.z,vec3(0,0,-1)),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.x,rotateOnX),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.y,rotateOnY),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing2.z,rotateOnZ),m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::moveAWing3(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing3), m_speed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing3.x,vec3(-1,0,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing3.y,vec3(0,1,0)),m_RotationSpeed);
-    mvMatrix = glm::interpolate(mvMatrix,glm::rotate(mvMatrix,m_RotationAWing3.z,vec3(0,0,-1)),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing3), m_speed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.x,rotateOnX),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.y,rotateOnY),m_RotationSpeed);
+    mvMatrix = interpolate(mvMatrix,rotate(mvMatrix,m_RotationAWing3.z,rotateOnZ),m_RotationSpeed);
     return mvMatrix;
 }

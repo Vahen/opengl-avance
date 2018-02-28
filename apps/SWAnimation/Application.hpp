@@ -120,11 +120,9 @@ private:
     glm::vec3 m_coordAWing3 = vec3();
     glm::vec3 m_RotationAWing3 = vec3();
 
-
-
-    vec3 rotateOnX = vec3(1,0,0);
-    vec3 rotateOnY = vec3(0,1,0);
-    vec3 rotateOnZ = vec3(0,0,1);
+    glm::vec3 rotateOnX = vec3(-1,0,0);
+    glm::vec3 rotateOnY = vec3(0,1,0);
+    glm::vec3 rotateOnZ = vec3(0,0,-1);
 
     float m_RotationSpeed = 0.01f;
     float m_speed = 0.01f;
