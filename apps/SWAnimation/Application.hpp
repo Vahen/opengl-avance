@@ -120,9 +120,9 @@ private:
     glm::vec3 m_coordAWing3 = vec3();
     glm::vec3 m_RotationAWing3 = vec3();
 
-    glm::vec3 rotateOnX = vec3(-1,0,0);
+    glm::vec3 rotateOnX = vec3(1,0,0);
     glm::vec3 rotateOnY = vec3(0,1,0);
-    glm::vec3 rotateOnZ = vec3(0,0,-1);
+    glm::vec3 rotateOnZ = vec3(0,0,1);
 
     float m_RotationSpeed = 0.01f;
     float m_speed = 0.01f;
@@ -261,13 +261,13 @@ private:
 
     // Fonction pour les differentes partie de l'animations //
 
-    mat4 &moveBigShip(mat4 &mvMatrix);
+    mat4 &applyTransformBigShip(mat4 &mvMatrix);
 
-    mat4 &moveAWing2(mat4 &mvMatrix);
+    mat4 &applyTransformAWing2(mat4 &mvMatrix);
 
-    mat4 &moveAWing3(mat4 &mvMatrix);
+    mat4 &applyTransformAWing3(mat4 &mvMatrix);
 
-    mat4 &moveAWing1(mat4 &mvMatrix);
+    mat4 &applyTransformAWing1(mat4 &mvMatrix);
 
     void sendLightProjInfo(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix, const mat4 &transformMatrix) const;
 
