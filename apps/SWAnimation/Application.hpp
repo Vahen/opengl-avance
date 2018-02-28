@@ -107,8 +107,15 @@ private:
     ObjData::PhongMaterial m_DefaultMaterial;
 
     ///////////////////////////////////////////
-    // Test des positionnement
-    glm::vec3 m_coordAWing1Test = vec3();
+    // vecteur des translation des objets
+    glm::vec3 m_coordBigShip = vec3();
+    glm::vec3 m_coordAWing1 = vec3();
+    glm::vec3 m_coordAWing2 = vec3();
+    glm::vec3 m_coordAWing3 = vec3();
+
+    vec3 rotateOnX = vec3(1,0,0);
+    vec3 rotateOnY = vec3(0,1,0);
+    vec3 rotateOnZ = vec3(0,0,1);
 
     float m_RotationSpeed = 0.01f;
     float m_speed = 0.01f;
@@ -313,4 +320,16 @@ private:
     mat4 &sixthPartAWing2(mat4 &mvMatrix);
 
     mat4 &sixthPartAWing3(mat4 &mvMatrix);
+
+    mat4 &firstPartLoop(int j, bool firstPart, mat4 &mvMatrix);
+
+    mat4 &secondPartLoop(int j, bool secondPart, mat4 &mvMatrix);
+
+    mat4 &thirdPartLoop(int j, bool thirdPart, mat4 &mvMatrix);
+
+    mat4 &fourthPartLoop(int j, bool fourthPart, mat4 &mvMatrix);
+
+    mat4 &fifthPartLoop(int j, bool fifthPart, mat4 &mvMatrix);
+
+    mat4 &sixthPartLoop(int j, bool sixthPart, mat4 &mvMatrix);
 };

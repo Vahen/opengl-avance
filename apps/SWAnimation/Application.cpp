@@ -355,35 +355,200 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
     auto fifthPart = time < 50. && time > 40;
     auto sixthPart = time < 60. && time > 50;
 
+    // todo
+    // vec3(0,1,1) -> monte en vertical
+    vec3 up = vec3(0,1,1);
+    vec3 down = vec3(0,-1,-1);
+
+    vec3 front = vec3();
+    vec3 back = vec3();
+
 
     if (firstPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+         m_coordBigShip += up;
+         m_coordAWing1 += vec3();
+         m_coordAWing2 += vec3();
+         m_coordAWing3 += vec3();
     }
     if (secondPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+        m_coordBigShip += vec3();
+        m_coordAWing1 += vec3();
+        m_coordAWing2 += vec3();
+        m_coordAWing3 += vec3();
     }
     if (thirdPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+        m_coordBigShip += vec3();
+        m_coordAWing1 += vec3();
+        m_coordAWing2 += vec3();
+        m_coordAWing3 += vec3();
     }
     if (fourthPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+        m_coordBigShip += vec3();
+        m_coordAWing1 += vec3();
+        m_coordAWing2 += vec3();
+        m_coordAWing3 += vec3();
     }
     if (fifthPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+        m_coordBigShip += vec3();
+        m_coordAWing1 += vec3();
+        m_coordAWing2 += vec3();
+        m_coordAWing3 += vec3();
     }
     if (sixthPart) {
-        m_coordAWing1Test += vec3(1, -1, 1);
+        m_coordBigShip += vec3();
+        m_coordAWing1 += vec3();
+        m_coordAWing2 += vec3();
+        m_coordAWing3 += vec3();
     }
 
 
-    // vec3(0,1,1) -> monte en vertical
+
     for (int i = 0; i < m_data.shapeCount; ++i) {
         if (i - countShapePassed >= m_tabIndexShape[j]) {
             countShapePassed += m_tabIndexShape[j];
             j++;
         }
         auto mvMatrix = viewMatrix;
-        if (firstPart) {
+        mvMatrix = firstPartLoop(j, firstPart, mvMatrix);
+        mvMatrix = secondPartLoop(j, secondPart, mvMatrix);
+        mvMatrix = thirdPartLoop(j, thirdPart, mvMatrix);
+        mvMatrix = fourthPartLoop(j, fourthPart, mvMatrix);
+        mvMatrix = fifthPartLoop(j, fifthPart, mvMatrix);
+        mvMatrix = sixthPartLoop(j, sixthPart, mvMatrix);
+
+//        auto mvMatrix = glm::translate(viewMatrix,m_SceneCenter) ;
+        auto mvpMatrix = projMatrix * mvMatrix;
+        auto normalMatrix = transpose(inverse(mvMatrix));
+
+        sendMatrixInformation(mvMatrix, mvpMatrix, normalMatrix);
+
+        auto materialId = m_data.materialIDPerShape[i];
+        const auto &material = materialId >= 0 ? m_data.materials[materialId] : m_DefaultMaterial;
+        setMaterial(material);
+        int val = m_data.indexCountPerShape[i];
+        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
+        offset += val;
+    }
+
+    for (const auto i : {0, 1, 2, 3})
+        glBindSampler(0, m_textureSampler);
+
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+mat4 &Application::sixthPartLoop(int j, bool sixthPart, mat4 &mvMatrix) {
+    if (sixthPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    mvMatrix = sixthPartBigShip(mvMatrix);
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = sixthPartAWing1(mvMatrix);
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = sixthPartAWing2(mvMatrix);
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = sixthPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+    return mvMatrix;
+}
+
+mat4 &Application::fifthPartLoop(int j, bool fifthPart, mat4 &mvMatrix) {
+    if (fifthPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    mvMatrix = fifthPartBigShip(mvMatrix);
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = fifthPartAWing1(mvMatrix);
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = fifthPartAWing2(mvMatrix);
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = fifthPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+    return mvMatrix;
+}
+
+mat4 &Application::fourthPartLoop(int j, bool fourthPart, mat4 &mvMatrix) {
+    if (fourthPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    mvMatrix = fourthPartBigShip(mvMatrix);
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = fourthPartAWing1(mvMatrix);
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = fourthPartAWing2(mvMatrix);
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = fourthPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+    return mvMatrix;
+}
+
+mat4 &Application::thirdPartLoop(int j, bool thirdPart, mat4 &mvMatrix) {
+    if (thirdPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    mvMatrix = thirdPartBigShip(mvMatrix);
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = thirdPartAWing1(mvMatrix);
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = thirdPartAWing2(mvMatrix);
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = thirdPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+    return mvMatrix;
+}
+
+mat4 &Application::secondPartLoop(int j, bool secondPart, mat4 &mvMatrix) {
+    if (secondPart) {
+            switch (j) {
+                case 0: // star destroyer
+                    mvMatrix = secondPartBigShip(mvMatrix);
+                    break;
+                case 1: // A-Wing 1
+                    mvMatrix = secondPartAWing1(mvMatrix);
+                    break;
+                case 2: // A-Wing 2
+                    mvMatrix = secondPartAWing2(mvMatrix);
+                    break;
+                case 3: // A-Wing 3
+                    mvMatrix = secondPartAWing3(mvMatrix);
+                    break;
+                default:
+                    break;
+            }
+        }
+    return mvMatrix;
+}
+
+mat4 &Application::firstPartLoop(int j, bool firstPart, mat4 &mvMatrix) {
+    if (firstPart) {
             switch (j) {
                 case 0: // star destroyer
                     //mvMatrix = glm::translate(mvMatrvix,m_SceneCenter);
@@ -411,116 +576,7 @@ void Application::geometryPass(const mat4 &projMatrix, const mat4 &viewMatrix) {
                     break;
             }
         }
-        if (secondPart) {
-            switch (j) {
-                case 0: // star destroyer
-                    mvMatrix = secondPartBigShip(mvMatrix);
-                    break;
-                case 1: // A-Wing 1
-                    mvMatrix = secondPartAWing1(mvMatrix);
-                    break;
-                case 2: // A-Wing 2
-                    mvMatrix = secondPartAWing2(mvMatrix);
-                    break;
-                case 3: // A-Wing 3
-                    mvMatrix = secondPartAWing3(mvMatrix);
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (thirdPart) {
-            switch (j) {
-                case 0: // star destroyer
-                    mvMatrix = thirdPartBigShip(mvMatrix);
-                    break;
-                case 1: // A-Wing 1
-                    mvMatrix = thirdPartAWing1(mvMatrix);
-                    break;
-                case 2: // A-Wing 2
-                    mvMatrix = thirdPartAWing2(mvMatrix);
-                    break;
-                case 3: // A-Wing 3
-                    mvMatrix = thirdPartAWing3(mvMatrix);
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (fourthPart) {
-            switch (j) {
-                case 0: // star destroyer
-                    mvMatrix = fourthPartBigShip(mvMatrix);
-                    break;
-                case 1: // A-Wing 1
-                    mvMatrix = fourthPartAWing1(mvMatrix);
-                    break;
-                case 2: // A-Wing 2
-                    mvMatrix = fourthPartAWing2(mvMatrix);
-                    break;
-                case 3: // A-Wing 3
-                    mvMatrix = fourthPartAWing3(mvMatrix);
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (fifthPart) {
-            switch (j) {
-                case 0: // star destroyer
-                    mvMatrix = fifthPartBigShip(mvMatrix);
-                    break;
-                case 1: // A-Wing 1
-                    mvMatrix = fifthPartAWing1(mvMatrix);
-                    break;
-                case 2: // A-Wing 2
-                    mvMatrix = fifthPartAWing2(mvMatrix);
-                    break;
-                case 3: // A-Wing 3
-                    mvMatrix = fifthPartAWing3(mvMatrix);
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (sixthPart) {
-            switch (j) {
-                case 0: // star destroyer
-                    mvMatrix = sixthPartBigShip(mvMatrix);
-                    break;
-                case 1: // A-Wing 1
-                    mvMatrix = sixthPartAWing1(mvMatrix);
-                    break;
-                case 2: // A-Wing 2
-                    mvMatrix = sixthPartAWing2(mvMatrix);
-                    break;
-                case 3: // A-Wing 3
-                    mvMatrix = sixthPartAWing3(mvMatrix);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-//        auto mvMatrix = glm::translate(viewMatrix,m_SceneCenter) ;
-        auto mvpMatrix = projMatrix * mvMatrix;
-        auto normalMatrix = transpose(inverse(mvMatrix));
-
-        sendMatrixInformation(mvMatrix, mvpMatrix, normalMatrix);
-
-        auto materialId = m_data.materialIDPerShape[i];
-        const auto &material = materialId >= 0 ? m_data.materials[materialId] : m_DefaultMaterial;
-        setMaterial(material);
-        int val = m_data.indexCountPerShape[i];
-        glDrawElements(GL_TRIANGLES, val, GL_UNSIGNED_INT, (const GLvoid *) (offset * sizeof(GLuint)));
-        offset += val;
-    }
-
-    for (const auto i : {0, 1, 2, 3})
-        glBindSampler(0, m_textureSampler);
-
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    return mvMatrix;
 }
 
 void Application::sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const {
@@ -871,13 +927,13 @@ void Application::initScreenTriangle() {
 
 mat4 &Application::firstPartBigShip(mat4 &mvMatrix) {
 
-    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1Test), m_speed);
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
     return mvMatrix;
 }
 
 mat4 &Application::firstPartAWing1(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1Test), m_speed);
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1), m_speed);
 //    mvMatrix = glm::interpolate(mvMatrix,
 //                                glm::rotate(mvMatrix, static_cast<float>(m_RotationSpeed * glfwGetTime()), glm::vec3(0, 1, 0)),
 //                                1.f);
@@ -886,11 +942,13 @@ mat4 &Application::firstPartAWing1(mat4 &mvMatrix) {
 
 mat4 &Application::firstPartAWing3(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing2), m_speed);
     return mvMatrix;
 }
 
 mat4 &Application::firstPartAWing2(mat4 &mvMatrix) {
     mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing3), m_speed);
     return mvMatrix;
 }
 
@@ -901,24 +959,32 @@ mat4 &Application::firstPartAWing2(mat4 &mvMatrix) {
 mat4 &Application::secondPartBigShip(mat4 &mvMatrix) {
     mvMatrix = firstPartBigShip(mvMatrix);
     // todo
+    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
+
     return mvMatrix;
 }
 
 mat4 &Application::secondPartAWing1(mat4 &mvMatrix) {
     mvMatrix = firstPartAWing1(mvMatrix);
     // todo
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing1), m_speed);
+
     return mvMatrix;
 }
 
 mat4 &Application::secondPartAWing2(mat4 &mvMatrix) {
     mvMatrix = firstPartAWing2(mvMatrix);
     // todo
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing2), m_speed);
+
     return mvMatrix;
 }
 
 mat4 &Application::secondPartAWing3(mat4 &mvMatrix) {
     mvMatrix = firstPartAWing3(mvMatrix);
     // todo
+    mvMatrix = glm::interpolate(mvMatrix, glm::translate(mvMatrix, m_coordAWing3), m_speed);
+
     return mvMatrix;
 }
 
