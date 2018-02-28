@@ -109,9 +109,18 @@ private:
     ///////////////////////////////////////////
     // vecteur des translation des objets
     glm::vec3 m_coordBigShip = vec3();
+    glm::vec3 m_RotationBigShip = vec3();
+
     glm::vec3 m_coordAWing1 = vec3();
+    glm::vec3 m_RotationAWing1 = vec3();
+
     glm::vec3 m_coordAWing2 = vec3();
+    glm::vec3 m_RotationAWing2 = vec3();
+
     glm::vec3 m_coordAWing3 = vec3();
+    glm::vec3 m_RotationAWing3 = vec3();
+
+
 
     vec3 rotateOnX = vec3(1,0,0);
     vec3 rotateOnY = vec3(0,1,0);
@@ -332,4 +341,6 @@ private:
     mat4 &fifthPartLoop(int j, bool fifthPart, mat4 &mvMatrix);
 
     mat4 &sixthPartLoop(int j, bool sixthPart, mat4 &mvMatrix);
+
+    void sendLightProjInfo(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix, const mat4 &transformMatrix) const;
 };
