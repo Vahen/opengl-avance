@@ -110,19 +110,25 @@ private:
     // vecteur des translation des objets
     glm::vec3 m_coordBigShip = vec3();
     glm::vec3 m_RotationBigShip = vec3();
+    glm::vec3 m_ScaleBigShip = vec3(1,1,1);
 
     glm::vec3 m_coordAWing1 = vec3();
     glm::vec3 m_RotationAWing1 = vec3();
+    glm::vec3 m_ScaleAWing1 = vec3(5,5,5);
 
     glm::vec3 m_coordAWing2 = vec3();
     glm::vec3 m_RotationAWing2 = vec3();
+    glm::vec3 m_ScaleAWing2 = vec3(5,5,5);
 
     glm::vec3 m_coordAWing3 = vec3();
     glm::vec3 m_RotationAWing3 = vec3();
+    glm::vec3 m_ScaleAWing3 = vec3(5,5,5);
 
-    glm::vec3 rotateOnX = vec3(1,0,0);
-    glm::vec3 rotateOnY = vec3(0,1,0);
-    glm::vec3 rotateOnZ = vec3(0,0,1);
+    glm::vec3 m_orientationTest = vec3(0,1,0);
+
+    float m_angleTestX = 90;
+    float m_angleTestY = 90;
+    float m_angleTestZ = 90;
 
     float m_RotationSpeed = 0.01f;
     float m_speed = 0.01f;

@@ -34,7 +34,7 @@ int Application::run() {
         const auto seconds = glfwGetTime();
 
         const auto projMatrix = perspective(radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
-                                            0.01f * m_SceneSizeLength, m_SceneSizeLength);
+                                            0.001f * m_SceneSizeLength, m_SceneSizeLength);
         const auto viewMatrix = m_viewController.getViewMatrix();
         const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
 
@@ -153,6 +153,11 @@ void Application::GUIDisplay(float *clearColor) {
     ImGui::InputFloat("RotationSpeed", &m_RotationSpeed);
     auto cameraPos = m_viewController.getM_position();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
+    ImGui::InputFloat3("Orientation", value_ptr(m_orientationTest));
+    ImGui::InputFloat3("PositionBigShip", value_ptr(m_coordBigShip));
+    ImGui::DragFloat("AngleX", &m_angleTestX, 0.1f, -360.f,360.f);
+    ImGui::DragFloat("AngleY", &m_angleTestY, 0.1f, -360.f,360.f);
+    ImGui::DragFloat("AngleZ", &m_angleTestZ, 0.1f, -360.f,360.f);
     ImGui::End();
 }
 
@@ -515,6 +520,10 @@ void Application::initScene() {
         loadObjAndPushIndexShape(objPath);
         loadObjAndPushIndexShape(objPath);
 
+        // Pour le postionnement des objets 3D
+        objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
+        loadObjAndPushIndexShape(objPath);
+
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
         m_SceneSizeLength = length(m_SceneSize);
@@ -766,11 +775,24 @@ void Application::initScreenTriangle() {
 ///////////////////////// Animation /////////////////////////////
 /////////////////////////////////////////////////////////////////
 
+// todo -> Ajouter une rotation de base pour bien positionner les vaisseau
+
 mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
 
-    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
+    mvMatrix = glm::scale(mvMatrix, m_ScaleBigShip);
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), m_orientationTest);
+    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
+    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
+    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
+//    mvMatrix = rotate(mvMatrix, radians(90.f), vec3(0, 1, 0));
+//    mvMatrix = rotate(mvMatrix, radians(20.f), vec3(-1, 0, 0));
+//    mvMatrix = rotate(mvMatrix, radians(20.f), vec3(0, 0, -1));
+//    mvMatrix = translate(mvMatrix, vec3(0, 100, 100));
+//    mvMatrix = translate(mvMatrix, vec3(0, 0, 50));
+    mvMatrix = translate(mvMatrix, m_coordBigShip);
+//    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, float(glfwGetTime()), rotateOnX), m_RotationSpeed);
-    mvMatrix = rotate(mvMatrix, float(m_RotationSpeed*glfwGetTime()), vec3(0,0.5,-0.5));
+    //mvMatrix = rotate(mvMatrix, float(m_RotationSpeed*glfwGetTime()), vec3(0,0.5,-0.5));
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationBigShip.x), rotateOnX), m_RotationSpeed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationBigShip.y), rotateOnY), m_RotationSpeed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationBigShip.z), rotateOnZ), m_RotationSpeed);
@@ -779,32 +801,39 @@ mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
 }
 
 mat4 &Application::applyTransformAWing1(mat4 &mvMatrix) {
-    mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = translate(mvMatrix, vec3(-40,90,-80));
+    mvMatrix = glm::scale(mvMatrix, m_ScaleAWing1);
+//    mvMatrix = rotate(mvMatrix, radians(90.f),vec3(1,0,0));
+    //mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = translate(mvMatrix, vec3(0, 20, 20));
+
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1), m_speed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.x), rotateOnX), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.y), rotateOnY), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.z), rotateOnZ), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.x), rotateOnX), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.y), rotateOnY), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.z), rotateOnZ), m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::applyTransformAWing2(mat4 &mvMatrix) {
-    mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = translate(mvMatrix, vec3(-60,90,-60));
+    mvMatrix = glm::scale(mvMatrix, m_ScaleAWing2);
+    mvMatrix = rotate(mvMatrix, radians(90.f), vec3(0, 1, 0));
+    //mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = translate(mvMatrix, vec3(0, 40, 40));
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.x, rotateOnX), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.y, rotateOnY), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.z, rotateOnZ), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.x, rotateOnX), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.y, rotateOnY), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.z, rotateOnZ), m_RotationSpeed);
     return mvMatrix;
 }
 
 mat4 &Application::applyTransformAWing3(mat4 &mvMatrix) {
-    mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = translate(mvMatrix, vec3(-60,90,-80));
+    mvMatrix = glm::scale(mvMatrix, m_ScaleAWing3);
+//    mvMatrix = rotate(mvMatrix, radians(90.f),vec3(0,0,1));
+    //mvMatrix = translate(mvMatrix, m_SceneCenter);
+    mvMatrix = translate(mvMatrix, vec3(0, 30, 30));
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing3), m_speed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.x), rotateOnX), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.y), rotateOnY), m_RotationSpeed);
-    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.z), rotateOnZ), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.x), rotateOnX), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.y), rotateOnY), m_RotationSpeed);
+//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing3.z), rotateOnZ), m_RotationSpeed);
     return mvMatrix;
 }
 
@@ -832,85 +861,85 @@ void Application::updateShipMovements() {
     vec3 back = vec3(0.5, 0, -0.5); // Arriere
 
     // Modif des vecteurs de translation et rotation
-    if (firstPart) {
-        m_coordBigShip += up;
-        m_RotationBigShip += m_speed*glfwGetTime();
-        cout << "Truc : " <<  m_RotationBigShip.y << endl;
-        cout << radians(m_RotationBigShip.y) << endl;
-        cout << "Time : " << glfwGetTime() << endl;
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (secondPart) {
-        m_coordBigShip += down;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (thirdPart) {
-        m_coordBigShip += front;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (fourthPart) {
-        m_coordBigShip += back;
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (fifthPart) {
-        m_coordBigShip += vec3();
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
-    if (sixthPart) {
-        m_coordBigShip += vec3();
-        m_RotationBigShip += vec3();
-
-        m_coordAWing1 += vec3();
-        m_RotationAWing1 += vec3();
-
-        m_coordAWing2 += vec3();
-        m_RotationAWing2 += vec3();
-
-        m_coordAWing3 += vec3();
-        m_RotationAWing3 += vec3();
-    }
+//    if (firstPart) {
+//        m_coordBigShip += up;
+//        m_RotationBigShip += m_speed*glfwGetTime();
+//        cout << "Truc : " <<  m_RotationBigShip.y << endl;
+//        cout << radians(m_RotationBigShip.y) << endl;
+//        cout << "Time : " << glfwGetTime() << endl;
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
+//    if (secondPart) {
+//        m_coordBigShip += down;
+//        m_RotationBigShip += vec3();
+//
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
+//    if (thirdPart) {
+//        m_coordBigShip += front;
+//        m_RotationBigShip += vec3();
+//
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
+//    if (fourthPart) {
+//        m_coordBigShip += back;
+//        m_RotationBigShip += vec3();
+//
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
+//    if (fifthPart) {
+//        m_coordBigShip += vec3();
+//        m_RotationBigShip += vec3();
+//
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
+//    if (sixthPart) {
+//        m_coordBigShip += vec3();
+//        m_RotationBigShip += vec3();
+//
+//        m_coordAWing1 += vec3();
+//        m_RotationAWing1 += vec3();
+//
+//        m_coordAWing2 += vec3();
+//        m_RotationAWing2 += vec3();
+//
+//        m_coordAWing3 += vec3();
+//        m_RotationAWing3 += vec3();
+//    }
 
 }
