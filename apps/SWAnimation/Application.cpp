@@ -781,15 +781,21 @@ mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
 
     mvMatrix = glm::scale(mvMatrix, m_ScaleBigShip);
 //    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), m_orientationTest);
+    mvMatrix = translate(mvMatrix, m_coordBigShip);
     mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
     mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
     mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
+
+    // Todo -> decommenter
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.x), vec3(1,0,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.y), vec3(0,1,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.z), vec3(0,0,1));
+
 //    mvMatrix = rotate(mvMatrix, radians(90.f), vec3(0, 1, 0));
 //    mvMatrix = rotate(mvMatrix, radians(20.f), vec3(-1, 0, 0));
 //    mvMatrix = rotate(mvMatrix, radians(20.f), vec3(0, 0, -1));
 //    mvMatrix = translate(mvMatrix, vec3(0, 100, 100));
 //    mvMatrix = translate(mvMatrix, vec3(0, 0, 50));
-    mvMatrix = translate(mvMatrix, m_coordBigShip);
 //    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordBigShip), m_speed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, float(glfwGetTime()), rotateOnX), m_RotationSpeed);
     //mvMatrix = rotate(mvMatrix, float(m_RotationSpeed*glfwGetTime()), vec3(0,0.5,-0.5));
@@ -815,9 +821,9 @@ mat4 &Application::applyTransformAWing1(mat4 &mvMatrix) {
 
 mat4 &Application::applyTransformAWing2(mat4 &mvMatrix) {
     mvMatrix = glm::scale(mvMatrix, m_ScaleAWing2);
+    mvMatrix = translate(mvMatrix, vec3(0, 40, 40));
     mvMatrix = rotate(mvMatrix, radians(90.f), vec3(0, 1, 0));
     //mvMatrix = translate(mvMatrix, m_SceneCenter);
-    mvMatrix = translate(mvMatrix, vec3(0, 40, 40));
     mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.x, rotateOnX), m_RotationSpeed);
 //    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, m_RotationAWing2.y, rotateOnY), m_RotationSpeed);
@@ -854,11 +860,14 @@ void Application::updateShipMovements() {
 
     // todo
     // vec3(0,1,1) -> monte en vertical
-    vec3 up = vec3(0, 1, 1); // Vertical +
-    vec3 down = vec3(0, -1, -1); // Vertical -
+    vec3 up = vec3(0, 1,0); // Vertical +
+    vec3 down = vec3(0, -1,0); // Vertical -
 
-    vec3 front = vec3(-0.5, 0, 0.5); // Avant
-    vec3 back = vec3(0.5, 0, -0.5); // Arriere
+    vec3 front = vec3(1, 0, 0); // Avant
+    vec3 back = vec3(-1, 0, 0); // Arriere
+
+    vec3 droite = vec3(0, 0, 1); // Arriere
+    vec3 gauche = vec3(0, 0, -1); // Arriere
 
     // Modif des vecteurs de translation et rotation
 //    if (firstPart) {

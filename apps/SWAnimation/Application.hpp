@@ -108,8 +108,8 @@ private:
 
     ///////////////////////////////////////////
     // vecteur des translation des objets
-    glm::vec3 m_coordBigShip = vec3();
-    glm::vec3 m_RotationBigShip = vec3();
+    glm::vec3 m_coordBigShip = vec3(-200,150,200);
+    glm::vec3 m_RotationBigShip = vec3(-46.5,-39,-46.4);
     glm::vec3 m_ScaleBigShip = vec3(1,1,1);
 
     glm::vec3 m_coordAWing1 = vec3();
