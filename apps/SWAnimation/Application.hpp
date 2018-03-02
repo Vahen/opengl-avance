@@ -10,6 +10,7 @@
 
 #include <limits>
 #include <chrono>
+#include "Camera.hpp"
 
 
 using namespace glmlv;
@@ -107,28 +108,28 @@ private:
     ObjData::PhongMaterial m_DefaultMaterial;
 
     ///////////////////////////////////////////
+
+    Camera trackBallCamera;
     // vecteur des translation des objets
-    glm::vec3 m_coordBigShip = vec3(-200,150,200);
-    glm::vec3 m_RotationBigShip = vec3(-46.5,-39,-46.4);
+    glm::vec3 m_coordBigShip = vec3(-200,150,220);
+    glm::vec3 m_RotationBigShip = vec3(-46.5,-39,-36.4); // Orientation
     glm::vec3 m_ScaleBigShip = vec3(1,1,1);
 
-    glm::vec3 m_coordAWing1 = vec3();
-    glm::vec3 m_RotationAWing1 = vec3();
+    glm::vec3 m_coordAWing1 = vec3(5,40,0);
+    glm::vec3 m_RotationAWing1 = vec3(-39,-44.7f,-32.5f);
     glm::vec3 m_ScaleAWing1 = vec3(5,5,5);
 
-    glm::vec3 m_coordAWing2 = vec3();
-    glm::vec3 m_RotationAWing2 = vec3();
+    glm::vec3 m_coordAWing2 = vec3(5,40,-10);
+    glm::vec3 m_RotationAWing2 = vec3(-39,-44.7f,-32.5f);
     glm::vec3 m_ScaleAWing2 = vec3(5,5,5);
 
-    glm::vec3 m_coordAWing3 = vec3();
-    glm::vec3 m_RotationAWing3 = vec3();
+    glm::vec3 m_coordAWing3 = vec3(5,40,-20);
+    glm::vec3 m_RotationAWing3 = vec3(-39,-44.7f,-32.5f);
     glm::vec3 m_ScaleAWing3 = vec3(5,5,5);
 
-    glm::vec3 m_orientationTest = vec3(0,1,0);
-
-    float m_angleTestX = 90;
-    float m_angleTestY = 90;
-    float m_angleTestZ = 90;
+    float m_angleTestX = -39.4f;
+    float m_angleTestY = -44.7f;
+    float m_angleTestZ = -32.5f;
 
     float m_RotationSpeed = 0.01f;
     float m_speed = 0.01f;
