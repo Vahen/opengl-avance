@@ -45,11 +45,46 @@ namespace glmlv {
             return m_RcpViewMatrix;
         }
 
-        void setPosition(glm::vec3 position){
-            m_position = position;
+        // /!\ Utiliser des valeurs très faibles
+        void translateFront(float dist) {
+            auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
+            auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
+            auto upVector = glm::vec3(m_RcpViewMatrix[1]);
+            glm::vec3 localTranslationVector(0.f);
+            localTranslationVector += m_fSpeed * dist * 0.01f * frontVector;
+            m_position += localTranslationVector;
+            setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
+        }
+
+        void translateLeft(float dist) {
+            auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
+            auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
+            auto upVector = glm::vec3(m_RcpViewMatrix[1]);
+            glm::vec3 localTranslationVector(0.f);
+            localTranslationVector += m_fSpeed * dist * 0.01f * leftVector;
+            m_position += localTranslationVector;
+            setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
+        }
+
+        void rotateLeft(float deg) {
+            auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
+            auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
+            auto upVector = glm::vec3(m_RcpViewMatrix[1]);
+            float lateralAngleDelta = 0.f;
+            lateralAngleDelta += deg * 0.001f;
+            auto newRcpViewMatrix = m_RcpViewMatrix;
+            newRcpViewMatrix = rotate(newRcpViewMatrix, lateralAngleDelta, glm::vec3(0, 0, 1));
+            frontVector = -glm::vec3(newRcpViewMatrix[2]);
+            leftVector = -glm::vec3(newRcpViewMatrix[0]);
+            upVector = cross(frontVector, leftVector);
+            setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
+        }
+
+        void setPosition(glm::vec3 position) {
             auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
             auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
             auto upVector = cross(frontVector, leftVector);
+            m_position = position;
             setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
         }
 

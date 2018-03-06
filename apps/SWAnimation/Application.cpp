@@ -24,52 +24,50 @@ using namespace std;
 int Application::run() {
 
     bool start = false;
-
     float clearColor[3] = {0.5, 0.5, 0.5};
     glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
-//    startTime = Clock::now();
-    // todo -> Changer la position de base de la camera une fois l'animation défini
-    // Définir une trajectoire pour la camera -> modif le viewController pour rajouter des fonctions pour que camera puisse bouger librement sans controle humain
+
     cout << "Press space to star the animation" << endl;
-    m_viewController.setPosition(m_SceneCenter);
 
-
-    const auto seconds = glfwGetTime();
-
-    const auto projMatrix = perspective(radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
-                                        0.001f * m_SceneSizeLength, m_SceneSizeLength);
-
-    const auto viewMatrix = m_viewController.getViewMatrix();
-//    const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
-
-    const float sceneRadius = m_SceneSizeLength * 0.5f;
-
-    const auto dirLightUpVector = computeDirectionVectorUp(radians(m_DirLightPhiAngleDegrees),
-                                                           radians(m_DirLightThetaAngleDegrees));
-    const auto dirLightViewMatrix = lookAt(m_SceneCenter + m_DirLightDirection * sceneRadius, m_SceneCenter,
-                                           dirLightUpVector); // Will not work if m_DirLightDirection is colinear to lightUpVector
-    const auto dirLightProjMatrix = ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius,
-                                          0.01f * sceneRadius, 2.f * sceneRadius);
+    m_viewController.setPosition(m_coordAWing1 * m_ScaleAWing1);
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
+        const auto seconds = glfwGetTime();
 
-        if(start){
+        const auto projMatrix = perspective(radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
+                                            0.001f * m_SceneSizeLength, m_SceneSizeLength);
+
+//        const auto viewMatrix = trackBallCamera.getViewMatrix();
+        const auto viewMatrix = m_viewController.getViewMatrix();
+//    const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
+
+        const float sceneRadius = m_SceneSizeLength * 0.5f;
+
+        const auto dirLightUpVector = computeDirectionVectorUp(radians(m_DirLightPhiAngleDegrees),
+                                                               radians(m_DirLightThetaAngleDegrees));
+        const auto dirLightViewMatrix = lookAt(m_SceneCenter + m_DirLightDirection * sceneRadius, m_SceneCenter,
+                                               dirLightUpVector); // Will not work if m_DirLightDirection is colinear to lightUpVector
+        const auto dirLightProjMatrix = ortho(-sceneRadius, sceneRadius, -sceneRadius, sceneRadius,
+                                              0.01f * sceneRadius, 2.f * sceneRadius);
+        if (start) {
             updateShipMovements();
+            m_viewController.translateFront(moveFrontTest * m_speed);
+            // todo Bouger la camera en fonction des deplacement des vaisseau
         }
 
         // Shadow map computation if necessary
         {
-            if (m_directionalSMResolutionDirty) {
-                cleanShadowMap();
-                m_directionalSMResolutionDirty = false;
-                m_directionalSMDirty = true; // The shadow map must also be recomputed
-            }
+//            if (m_directionalSMResolutionDirty) {
+//                cleanShadowMap();
+//                m_directionalSMResolutionDirty = false;
+//                m_directionalSMDirty = true; // The shadow map must also be recomputed
+//            }
 
-            if (m_directionalSMDirty) {
+//            if (m_directionalSMDirty) {
                 m_directionalSMProgram.use();
                 computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
-                m_directionalSMDirty = false;
-            }
+//                m_directionalSMDirty = false;
+//            }
         }
 
         // Geometry pass
@@ -103,8 +101,8 @@ int Application::run() {
         if (!guiHasFocus) {
             m_viewController.update(float(ellapsedTime));
         }
-        if(!start){
-            if (glfwGetKey(m_GLFWHandle.window(), GLFW_KEY_SPACE)){
+        if (!start) {
+            if (glfwGetKey(m_GLFWHandle.window(), GLFW_KEY_SPACE)) {
                 start = true;
                 startTime = Clock::now();
             }
@@ -112,11 +110,10 @@ int Application::run() {
         auto now = Clock::now();
         auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
         auto time = timeElapsed.count();
-        if(glm::round(glm::mod(time, 3.)) == 0){
-            m_directionalSMResolutionDirty = true;
-        }
-
-
+//        if (glm::round(glm::mod(time, 2.)) == 0) {
+//            m_directionalSMResolutionDirty = true;
+//            m_directionalSMDirty = true;
+//        }
     }
 
     return 0;
@@ -130,11 +127,6 @@ void Application::GUIDisplay(float *clearColor) {
     if (ImGui::ColorEdit3("clearColor", clearColor)) {
         glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
     }
-//            if (ImGui::Button("Sort shapes wrt materialID")) {
-//                sort(m_data.materialIDPerShape.begin(),m_data.materialIDPerShape.end(), [&](auto lhs, auto rhs) {
-//                    return lhs.materialID < rhs.materialID;
-//                });
-//            }
     if (ImGui::CollapsingHeader("Directional Light")) {
         ImGui::ColorEdit3("DirLightColor", value_ptr(m_DirLightColor));
         ImGui::DragFloat("DirLightIntensity", &m_DirLightIntensity, 0.1f, 0.f, 100.f);
@@ -173,13 +165,14 @@ void Application::GUIDisplay(float *clearColor) {
 
     ImGui::InputFloat("MovementSpeed", &m_speed);
     ImGui::InputFloat("RotationSpeed", &m_RotationSpeed);
+    ImGui::InputFloat("Front test", &moveFrontTest);
     auto cameraPos = m_viewController.getM_position();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
 
-    ImGui::InputFloat3("PositionAWing1", value_ptr(m_coordAWing1));
-    ImGui::DragFloat("AngleX", &m_angleTestX, 0.1f, -360.f,360.f);
-    ImGui::DragFloat("AngleY", &m_angleTestY, 0.1f, -360.f,360.f);
-    ImGui::DragFloat("AngleZ", &m_angleTestZ, 0.1f, -360.f,360.f);
+//    ImGui::InputFloat3("PositionAWing1", value_ptr(m_coordAWing1));
+//    ImGui::DragFloat("AngleX", &m_angleTestX, 0.1f, -360.f, 360.f);
+//    ImGui::DragFloat("AngleY", &m_angleTestY, 0.1f, -360.f, 360.f);
+//    ImGui::DragFloat("AngleZ", &m_angleTestZ, 0.1f, -360.f, 360.f);
     ImGui::End();
 }
 
@@ -804,38 +797,34 @@ mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
     // Base du vaisseau
     mvMatrix = glm::scale(mvMatrix, m_ScaleBigShip);
     mvMatrix = translate(mvMatrix, m_coordBigShip);
-    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.x), vec3(1,0,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.y), vec3(0,1,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.z), vec3(0,0,1));
-
+    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.x), vec3(1, 0, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.y), vec3(0, 1, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.z), vec3(0, 0, 1));
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
 
     return mvMatrix;
 }
 
 mat4 &Application::applyTransformAWing1(mat4 &mvMatrix) {
     mvMatrix = glm::scale(mvMatrix, m_ScaleAWing1);
-//    mvMatrix = rotate(mvMatrix, radians(90.f),vec3(1,0,0));
-    //mvMatrix = translate(mvMatrix, m_SceneCenter);
     mvMatrix = translate(mvMatrix, m_coordAWing1);
-    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
-    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
-    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
-//    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.x), vec3(1,0,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.y), vec3(0,1,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.z), vec3(0,0,1));
-//    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing1), m_speed);
-//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.x), rotateOnX), m_RotationSpeed);
-//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.y), rotateOnY), m_RotationSpeed);
-//    mvMatrix = interpolate(mvMatrix, rotate(mvMatrix, radians(m_RotationAWing1.z), rotateOnZ), m_RotationSpeed);
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
+//    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.x), vec3(1, 0, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.y), vec3(0, 1, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.z), vec3(0, 0, 1));
     return mvMatrix;
 }
 
 mat4 &Application::applyTransformAWing2(mat4 &mvMatrix) {
     mvMatrix = glm::scale(mvMatrix, m_ScaleAWing2);
     mvMatrix = translate(mvMatrix, m_coordAWing2);
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.x), vec3(1,0,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.y), vec3(0,1,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.z), vec3(0,0,1));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.x), vec3(1, 0, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.y), vec3(0, 1, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.z), vec3(0, 0, 1));
 //    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
     return mvMatrix;
 }
@@ -843,9 +832,9 @@ mat4 &Application::applyTransformAWing2(mat4 &mvMatrix) {
 mat4 &Application::applyTransformAWing3(mat4 &mvMatrix) {
     mvMatrix = glm::scale(mvMatrix, m_ScaleAWing3);
     mvMatrix = translate(mvMatrix, m_coordAWing3);
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.x), vec3(1,0,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.y), vec3(0,1,0));
-    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.z), vec3(0,0,1));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.x), vec3(1, 0, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.y), vec3(0, 1, 0));
+    mvMatrix = rotate(mvMatrix, radians(m_RotationAWing3.z), vec3(0, 0, 1));
     return mvMatrix;
 }
 
@@ -857,55 +846,54 @@ void Application::updateShipMovements() {
         cout << "Time elapsed = " << timeElapsed.count() << " seconds" << endl;
     }
 
-    auto firstPart = time < 10. && time > 0;
-    auto secondPart = time < 20. && time > 10;
-    auto thirdPart = time < 30. && time > 20;
-    auto fourthPart = time < 40. && time > 30;
-    auto fifthPart = time < 50. && time > 40;
-    auto sixthPart = time < 60. && time > 50;
+    auto firstPart = time < 8. && time > 0;
+    auto secondPart = time < 16. && time > 8;
+//    auto thirdPart = time < 30. && time > 20;
+//    auto fourthPart = time < 40. && time > 30;
+//    auto fifthPart = time < 50. && time > 40;
+//    auto sixthPart = time < 60. && time > 50;
 
     // todo
-    // vec3(0,1,1) -> monte en vertical
-    vec3 up = vec3(0, 1,0); // Vertical +
-    vec3 down = vec3(0, -1,0); // Vertical -
+    vec3 haut = vec3(0, 1, 0); // Vertical +
+    vec3 bas = vec3(0, -1, 0); // Vertical -
 
-    vec3 front = vec3(1, 0, 0); // Avant
-    vec3 back = vec3(-1, 0, 0); // Arriere
+    vec3 avant = vec3(-1, 0, 0); // Avant
+    vec3 arriere = vec3(1, 0, 0); // Arriere
 
-    vec3 droite = vec3(0, 0, 1); // Arriere
-    vec3 gauche = vec3(0, 0, -1); // Arriere
+    vec3 droite = vec3(0, 0, 1); // droite
+    vec3 gauche = vec3(0, 0, -1); // gauche
 
+    float speedBoostFighter = 2.f;
     // Modif des vecteurs de translation et rotation
     if (firstPart) {
-//        m_coordBigShip += up;
+        m_coordBigShip += vec3(-12,0,0) * m_speed;
 //        m_RotationBigShip.x += 0.01f;
 //        m_RotationBigShip.y += 0.01f;
 //        m_RotationBigShip.z += 0.01f;
-        cout << "Truc : " <<  m_RotationBigShip.y << endl;
-        cout << radians(m_RotationBigShip.y) << endl;
-        cout << "Time : " << glfwGetTime() << endl;
-        m_coordAWing1 += vec3()*m_speed;
-        m_RotationAWing1 += vec3()*m_RotationSpeed;
+        m_coordAWing1 += vec3(-2, -1, 1) * m_speed*speedBoostFighter;
+        m_RotationAWing1 += vec3() * m_RotationSpeed;
 
-        m_coordAWing2 += vec3()*m_speed;
-        m_RotationAWing2 += vec3()*m_RotationSpeed;
+        m_coordAWing2 += vec3(-2,0.5,0) * m_speed*speedBoostFighter;
+        m_RotationAWing2 += vec3() * m_RotationSpeed;
 
-        m_coordAWing3 += vec3()*m_speed;
-        m_RotationAWing3 += vec3()*m_RotationSpeed;
+        m_coordAWing3 += vec3(-2, -1.3, -1) * m_speed*speedBoostFighter;
+        m_RotationAWing3 += vec3() * m_RotationSpeed;
     }
-//    if (secondPart) {
-//        m_coordBigShip += down;
-//        m_RotationBigShip += vec3();
-//
-//        m_coordAWing1 += vec3();
-//        m_RotationAWing1 += vec3();
-//
-//        m_coordAWing2 += vec3();
-//        m_RotationAWing2 += vec3();
-//
-//        m_coordAWing3 += vec3();
-//        m_RotationAWing3 += vec3();
-//    }
+    if (secondPart) {
+        m_coordBigShip += vec3(-12,0,0) * m_speed;
+//        m_RotationBigShip.x += 0.01f;
+//        m_RotationBigShip.y += 0.01f;
+//        m_RotationBigShip.z += 0.01f;
+        m_coordAWing1 += vec3(-2, 0.5, -1) * m_speed*speedBoostFighter;
+        m_RotationAWing1 += vec3() * m_RotationSpeed;
+
+        m_coordAWing2 += vec3(-2,-0.8,0) * m_speed*speedBoostFighter;
+        m_RotationAWing2 += vec3() * m_RotationSpeed;
+
+        m_coordAWing3 += vec3(-2, 0.5, 1) * m_speed*speedBoostFighter;
+        m_RotationAWing3 += vec3() * m_RotationSpeed;
+    }
+
 //    if (thirdPart) {
 //        m_coordBigShip += front;
 //        m_RotationBigShip += vec3();

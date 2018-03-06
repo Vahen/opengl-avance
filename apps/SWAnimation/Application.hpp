@@ -11,6 +11,7 @@
 #include <limits>
 #include <chrono>
 #include "Camera.hpp"
+#include "TrackballCamera.hpp"
 
 
 using namespace glmlv;
@@ -109,23 +110,28 @@ private:
 
     ///////////////////////////////////////////
 
-    Camera trackBallCamera;
+//    TrackballCamera trackBallCamera;
+//
+//    glm::vec3 posFromTargetTmp = vec3(100,-500,-200);
+//    float angleX = 0.0f;
+//    float angleY = 90.0f;
+//    float m_distance = -5.f;
     // vecteur des translation des objets
-    glm::vec3 m_coordBigShip = vec3(-200,150,220);
+    glm::vec3 m_coordBigShip = vec3(-220,150,240);
     glm::vec3 m_RotationBigShip = vec3(-46.5,-39,-36.4); // Orientation
-    glm::vec3 m_ScaleBigShip = vec3(1,1,1);
+    glm::vec3 m_ScaleBigShip = vec3(1.3,1.3,1.3);
 
-    glm::vec3 m_coordAWing1 = vec3(5,40,0);
-    glm::vec3 m_RotationAWing1 = vec3(-39,-44.7f,-32.5f);
-    glm::vec3 m_ScaleAWing1 = vec3(5,5,5);
+    glm::vec3 m_coordAWing1 = vec3(40,80,0); // Gauche
+    glm::vec3 m_RotationAWing1 = vec3(-33.8f,-40.8f,-21.4f);
+    glm::vec3 m_ScaleAWing1 = vec3(4,4,4);
 
-    glm::vec3 m_coordAWing2 = vec3(5,40,-10);
-    glm::vec3 m_RotationAWing2 = vec3(-39,-44.7f,-32.5f);
-    glm::vec3 m_ScaleAWing2 = vec3(5,5,5);
+    glm::vec3 m_coordAWing2 = vec3(60,90,-10);  // Au centre
+    glm::vec3 m_RotationAWing2 = vec3(-33.8f,-40.8f,-21.4f);
+    glm::vec3 m_ScaleAWing2 = vec3(4,4,4);
 
-    glm::vec3 m_coordAWing3 = vec3(5,40,-20);
-    glm::vec3 m_RotationAWing3 = vec3(-39,-44.7f,-32.5f);
-    glm::vec3 m_ScaleAWing3 = vec3(5,5,5);
+    glm::vec3 m_coordAWing3 = vec3(40,70,-20); // Droite
+    glm::vec3 m_RotationAWing3 = vec3(-33.8f,-40.8f,-21.4f);
+    glm::vec3 m_ScaleAWing3 = vec3(4,4,4);
 
     float m_angleTestX = -39.4f;
     float m_angleTestY = -44.7f;
@@ -279,4 +285,7 @@ private:
     void sendLightProjInfo(const mat4 &dirLightViewMatrix, const mat4 &dirLightProjMatrix, const mat4 &transformMatrix) const;
 
     void updateShipMovements();
+
+
+    float moveFrontTest = 0.0f;
 };
