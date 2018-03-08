@@ -51,7 +51,7 @@ namespace glmlv {
             auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
             auto upVector = glm::vec3(m_RcpViewMatrix[1]);
             glm::vec3 localTranslationVector(0.f);
-            localTranslationVector += m_fSpeed * dist * 0.01f * frontVector;
+            localTranslationVector += m_fSpeed * dist * 0.001f * frontVector;
             m_position += localTranslationVector;
             setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
         }
@@ -61,7 +61,17 @@ namespace glmlv {
             auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
             auto upVector = glm::vec3(m_RcpViewMatrix[1]);
             glm::vec3 localTranslationVector(0.f);
-            localTranslationVector += m_fSpeed * dist * 0.01f * leftVector;
+            localTranslationVector += m_fSpeed * dist * 0.001f * leftVector;
+            m_position += localTranslationVector;
+            setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
+        }
+
+        void translateUp(float dist) {
+            auto frontVector = -glm::vec3(m_RcpViewMatrix[2]);
+            auto leftVector = -glm::vec3(m_RcpViewMatrix[0]);
+            auto upVector = glm::vec3(m_RcpViewMatrix[1]);
+            glm::vec3 localTranslationVector(0.f);
+            localTranslationVector += m_fSpeed * dist * 0.001f * upVector;
             m_position += localTranslationVector;
             setViewMatrix(lookAt(m_position, m_position + frontVector, upVector));
         }

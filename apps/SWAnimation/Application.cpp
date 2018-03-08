@@ -16,7 +16,7 @@
 
 #include <chrono>
 
-using Clock=std::chrono::high_resolution_clock;
+using Clock=std::chrono::system_clock;
 using namespace glmlv;
 using namespace glm;
 using namespace std;
@@ -24,7 +24,7 @@ using namespace std;
 int Application::run() {
 
     bool start = false;
-    float clearColor[3] = {0.5, 0.5, 0.5};
+    float clearColor[3] = {0.45, 0.8, 0.45};
     glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
 
     cout << "Press space to star the animation" << endl;
@@ -37,9 +37,7 @@ int Application::run() {
         const auto projMatrix = perspective(radians(70.f), float(m_nWindowWidth) / m_nWindowHeight,
                                             0.001f * m_SceneSizeLength, m_SceneSizeLength);
 
-//        const auto viewMatrix = trackBallCamera.getViewMatrix();
         const auto viewMatrix = m_viewController.getViewMatrix();
-//    const auto rcpViewMatrix = m_viewController.getRcpViewMatrix();
 
         const float sceneRadius = m_SceneSizeLength * 0.5f;
 
@@ -51,10 +49,6 @@ int Application::run() {
                                               0.01f * sceneRadius, 2.f * sceneRadius);
         if (start) {
             updateShipMovements();
-            m_viewController.translateFront(moveFrontTest * m_speed);
-//            m_viewController.rotateOnSelf(5.f);
-//            m_viewController.rotateLeft(5.f);
-//            m_viewController.rotateUp(5.f);
             // todo Bouger la camera en fonction des deplacement des vaisseau
         }
 
@@ -67,8 +61,8 @@ int Application::run() {
 //            }
 
 //            if (m_directionalSMDirty) {
-                m_directionalSMProgram.use();
-                computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
+            m_directionalSMProgram.use();
+            computShadowMap(dirLightViewMatrix, dirLightProjMatrix);
 //                m_directionalSMDirty = false;
 //            }
         }
@@ -174,10 +168,9 @@ void Application::GUIDisplay(float *clearColor) {
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
     ImGui::InputFloat3("Orientation camera", value_ptr(cameraOrient));
 
-//    ImGui::InputFloat3("PositionAWing1", value_ptr(m_coordAWing1));
-//    ImGui::DragFloat("AngleX", &m_angleTestX, 0.1f, -360.f, 360.f);
-//    ImGui::DragFloat("AngleY", &m_angleTestY, 0.1f, -360.f, 360.f);
-//    ImGui::DragFloat("AngleZ", &m_angleTestZ, 0.1f, -360.f, 360.f);
+    ImGui::InputFloat3("OrientAWing1", value_ptr(m_RotationAWing1));
+    ImGui::InputFloat3("OrientAWing2", value_ptr(m_RotationAWing2));
+    ImGui::InputFloat3("OrientAWing3", value_ptr(m_RotationAWing3));
     ImGui::End();
 }
 
@@ -541,9 +534,11 @@ void Application::initScene() {
         loadObjAndPushIndexShape(objPath);
 
         // Pour le postionnement des objets 3D
-        objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
-        loadObjAndPushIndexShape(objPath);
+        //objPath = m_AssetsRootPath / "glmlv" / "models" / "crytek-sponza" / "sponza.obj";
+        //loadObjAndPushIndexShape(objPath);
 
+        objPath = m_AssetsRootPath / "glmlv" / "models" / "Kameri_lunar_colony" / "Kameri_lunar_colony.obj";
+        loadObjAndPushIndexShape(objPath);
 
         m_SceneSize = m_data.bboxMax - m_data.bboxMin;
         m_SceneSizeLength = length(m_SceneSize);
@@ -805,9 +800,6 @@ mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
     mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.x), vec3(1, 0, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.y), vec3(0, 1, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationBigShip.z), vec3(0, 0, 1));
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
 
     return mvMatrix;
 }
@@ -815,9 +807,6 @@ mat4 &Application::applyTransformBigShip(mat4 &mvMatrix) {
 mat4 &Application::applyTransformAWing1(mat4 &mvMatrix) {
     mvMatrix = glm::scale(mvMatrix, m_ScaleAWing1);
     mvMatrix = translate(mvMatrix, m_coordAWing1);
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestX), vec3(1,0,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestY), vec3(0,1,0));
-//    mvMatrix = rotate(mvMatrix, radians(m_angleTestZ), vec3(0,0,1));
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.x), vec3(1, 0, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.y), vec3(0, 1, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing1.z), vec3(0, 0, 1));
@@ -830,7 +819,6 @@ mat4 &Application::applyTransformAWing2(mat4 &mvMatrix) {
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.x), vec3(1, 0, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.y), vec3(0, 1, 0));
     mvMatrix = rotate(mvMatrix, radians(m_RotationAWing2.z), vec3(0, 0, 1));
-//    mvMatrix = interpolate(mvMatrix, translate(mvMatrix, m_coordAWing2), m_speed);
     return mvMatrix;
 }
 
@@ -847,16 +835,20 @@ void Application::updateShipMovements() {
     auto now = Clock::now();
     auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
     auto time = timeElapsed.count();
-    if (glm::round(glm::mod(time, 10.)) == 0) {
-        cout << "Time elapsed = " << timeElapsed.count() << " seconds" << endl;
-    }
-
-    auto firstPart = time < 8. && time > 0;
-    auto secondPart = time < 20. && time > 8;
-//    auto thirdPart = time < 30. && time > 20;
-//    auto fourthPart = time < 40. && time > 30;
-//    auto fifthPart = time < 50. && time > 40;
-//    auto sixthPart = time < 60. && time > 50;
+    auto part1 = time < 5. && time > 0;
+    auto part2 = time < 8. && time > 5;
+    auto part3 = time < 11. && time > 8;
+    auto part4 = time < 14. && time > 11.;
+    auto part5 = time < 18. && time > 14.;
+    auto part6 = time < 25. && time > 18.;
+    auto part7 = time < 30. && time > 25.;
+    auto part8 = time < 35. && time > 30.;
+    auto part9 = time < 40. && time > 35.;
+    auto part10 = time < 45. && time > 40.;
+    auto part11 = time < 50. && time > 45.;
+    auto part12 = time < 55. && time > 50.;
+    auto part13 = time < 60. && time > 55.;
+    auto part14 = time < 65. && time > 60.;
 
     // todo
     vec3 haut = vec3(0, 1, 0); // Vertical +
@@ -869,87 +861,107 @@ void Application::updateShipMovements() {
     vec3 gauche = vec3(0, 0, -1); // gauche
 
     float speedBoostFighter = 2.f;
+    // todo -> Modif les deplacement pour nouvelles scene
     // Modif des vecteurs de translation et rotation
-    if (firstPart) {
-        m_coordBigShip += vec3(-12,0,0) * m_speed;
-//        m_RotationBigShip.x += 0.01f;
-//        m_RotationBigShip.y += 0.01f;
-//        m_RotationBigShip.z += 0.01f;
-        m_coordAWing1 += vec3(-2, -1.3, 2) * m_speed*speedBoostFighter;
-        m_RotationAWing1 += vec3() * m_RotationSpeed;
+    if (part1) {
+        m_coordAWing1 += vec3(-2, -1.3, 0) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-2, -1.3, 0) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-2, -1.3, 0) * m_speed * speedBoostFighter;
 
-        m_coordAWing2 += vec3(-2,0.5,0) * m_speed*speedBoostFighter;
-        m_RotationAWing2 += vec3() * m_RotationSpeed;
+        m_RotationAWing1.x += -3.f * m_RotationSpeed;
+        m_RotationAWing2.x += -3.f * m_RotationSpeed;
+        m_RotationAWing3.x += -3.f * m_RotationSpeed;
 
-        m_coordAWing3 += vec3(-2, -1.3, -2) * m_speed*speedBoostFighter;
-        m_RotationAWing3 += vec3() * m_RotationSpeed;
+        m_viewController.rotateLeft(0.7f);
+        m_viewController.translateUp(-0.15f);
+        m_viewController.translateFront(0.2f);
+    } else if (part2) {
+        m_coordAWing1 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+        m_RotationAWing1.z += -6.f * m_RotationSpeed;
+        m_RotationAWing2.z += -6.f * m_RotationSpeed;
+        m_RotationAWing3.z += -6.f * m_RotationSpeed;
+
+        m_viewController.translateFront(0.2f);
+        m_viewController.rotateLeft(-0.1f);
+    } else if (part3) {
+//        cout << "------ Part 3 -----" << endl;
+        m_coordAWing1 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
+
+        m_RotationAWing1.x += -3.f * m_RotationSpeed;
+        m_RotationAWing2.x += -3.f * m_RotationSpeed;
+        m_RotationAWing3.x += -3.f * m_RotationSpeed;
+        m_viewController.translateFront(0.25f);
+        m_viewController.rotateLeft(-0.5f);
+        m_viewController.translateUp(-0.15f);
+    } else if (part4) {
+        m_coordAWing1 += vec3(0, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0, 0, -1) * m_speed * speedBoostFighter;
+
+        m_RotationAWing1.z += -2.f * m_RotationSpeed;
+        m_RotationAWing2.z += -2.f * m_RotationSpeed;
+        m_RotationAWing3.z += -2.f * m_RotationSpeed;
+    } else if (part5) {
+        m_coordAWing1 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
+        m_RotationAWing1.z += -1.f * m_RotationSpeed;
+        m_RotationAWing2.z += -1.f * m_RotationSpeed;
+        m_RotationAWing3.z += -1.f * m_RotationSpeed;
+
+        m_RotationAWing1.y += 4.f * m_RotationSpeed;
+        m_RotationAWing2.y += 4.f * m_RotationSpeed;
+        m_RotationAWing3.y += 4.f * m_RotationSpeed;
+    } else if (part6) {
+        m_coordAWing1 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
+    } else if (part7) {
+        m_coordAWing1 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
+        m_RotationAWing1.x += 10.f * m_RotationSpeed;
+        m_RotationAWing2.x += 10.f * m_RotationSpeed;
+        m_RotationAWing3.x += 10.f * m_RotationSpeed;
+
+        m_RotationAWing1.y += -1.f * m_RotationSpeed;
+        m_RotationAWing2.y += -1.f * m_RotationSpeed;
+        m_RotationAWing3.y += -1.f * m_RotationSpeed;
+    } else if (part8) {
+        // faire rotation pour passer de 49 / 12.4 / -121 à 0 / 20 / 0
+        m_RotationAWing1 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
+        m_RotationAWing2 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
+        m_RotationAWing3 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
+    } else if (part9) {
+        m_RotationAWing1.y += 1.1f * m_RotationSpeed;
+        m_RotationAWing2.y += 1.1f * m_RotationSpeed;
+        m_RotationAWing3.y += 1.1f * m_RotationSpeed;
+    } else if (part10) {
+        m_coordAWing1 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
+    } else if (part11) {
+        m_coordAWing1 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
+    } else if (part12) {
+
+        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
     }
-    if (secondPart) {
-        m_coordBigShip += vec3(-12,0,0) * m_speed;
-//        m_RotationBigShip.x += 0.01f;
-//        m_RotationBigShip.y += 0.01f;
-//        m_RotationBigShip.z += 0.01f;
-        m_coordAWing1 += vec3(-2, 0.85, -2) * m_speed*speedBoostFighter;
-        m_RotationAWing1 += vec3() * m_RotationSpeed;
-
-        m_coordAWing2 += vec3(-2,-0.8,0) * m_speed*speedBoostFighter;
-        m_RotationAWing2 += vec3() * m_RotationSpeed;
-
-        m_coordAWing3 += vec3(-2, 0.9, 2) * m_speed*speedBoostFighter;
-        m_RotationAWing3 += vec3() * m_RotationSpeed;
-    }
-
-//    if (thirdPart) {
-//        m_coordBigShip += front;
-//        m_RotationBigShip += vec3();
-//
-//        m_coordAWing1 += vec3();
-//        m_RotationAWing1 += vec3();
-//
-//        m_coordAWing2 += vec3();
-//        m_RotationAWing2 += vec3();
-//
-//        m_coordAWing3 += vec3();
-//        m_RotationAWing3 += vec3();
-//    }
-//    if (fourthPart) {
-//        m_coordBigShip += back;
-//        m_RotationBigShip += vec3();
-//
-//        m_coordAWing1 += vec3();
-//        m_RotationAWing1 += vec3();
-//
-//        m_coordAWing2 += vec3();
-//        m_RotationAWing2 += vec3();
-//
-//        m_coordAWing3 += vec3();
-//        m_RotationAWing3 += vec3();
-//    }
-//    if (fifthPart) {
-//        m_coordBigShip += vec3();
-//        m_RotationBigShip += vec3();
-//
-//        m_coordAWing1 += vec3();
-//        m_RotationAWing1 += vec3();
-//
-//        m_coordAWing2 += vec3();
-//        m_RotationAWing2 += vec3();
-//
-//        m_coordAWing3 += vec3();
-//        m_RotationAWing3 += vec3();
-//    }
-//    if (sixthPart) {
-//        m_coordBigShip += vec3();
-//        m_RotationBigShip += vec3();
-//
-//        m_coordAWing1 += vec3();
-//        m_RotationAWing1 += vec3();
-//
-//        m_coordAWing2 += vec3();
-//        m_RotationAWing2 += vec3();
-//
-//        m_coordAWing3 += vec3();
-//        m_RotationAWing3 += vec3();
+//    else if (part13) {
+//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//    }else if (part14) {
+//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
 //    }
 
 }

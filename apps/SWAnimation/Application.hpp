@@ -117,7 +117,7 @@ private:
 //    float angleY = 90.0f;
 //    float m_distance = -5.f;
     // vecteur des translation des objets
-    glm::vec3 m_coordBigShip = vec3(-220,150,240);
+    glm::vec3 m_coordBigShip = vec3(-400,400,0);
     glm::vec3 m_RotationBigShip = vec3(-46.5,-39,-36.4); // Orientation
     glm::vec3 m_ScaleBigShip = vec3(1.3,1.3,1.3);
 
@@ -125,7 +125,7 @@ private:
     glm::vec3 m_RotationAWing1 = vec3(-33.8f,-40.8f,-21.4f);
     glm::vec3 m_ScaleAWing1 = vec3(4,4,4);
 
-    glm::vec3 m_coordAWing2 = vec3(60,90,-10);  // Au centre
+    glm::vec3 m_coordAWing2 = vec3(60,80,-10);  // Au centre
     glm::vec3 m_RotationAWing2 = vec3(-33.8f,-40.8f,-21.4f);
     glm::vec3 m_ScaleAWing2 = vec3(4,4,4);
 
@@ -133,12 +133,11 @@ private:
     glm::vec3 m_RotationAWing3 = vec3(-33.8f,-40.8f,-21.4f);
     glm::vec3 m_ScaleAWing3 = vec3(4,4,4);
 
-    float m_angleTestX = -39.4f;
-    float m_angleTestY = -44.7f;
-    float m_angleTestZ = -32.5f;
-
     float m_RotationSpeed = 0.01f;
-    float m_speed = 0.01f;
+    float m_speed = 0.009f;
+
+    std::chrono::system_clock::time_point startTime = std::chrono::system_clock::now();
+
     ///////////////////////////////////////////
 
     glm::vec3 m_SceneSize = glm::vec3(0.f); // Used for camera speed and projection matrix parameters
@@ -195,8 +194,8 @@ private:
     float m_DirLightThetaAngleDegrees = 30.f;
     glm::vec3 m_DirLightDirection = computeDirectionVector(glm::radians(m_DirLightPhiAngleDegrees),
                                                            glm::radians(m_DirLightThetaAngleDegrees));
-    glm::vec3 m_DirLightColor = glm::vec3(1, 1, 1);
-    float m_DirLightIntensity = 2.f;
+    glm::vec3 m_DirLightColor = glm::vec3(0.9, 0.8, 0.8);
+    float m_DirLightIntensity = 1.f;
     float m_DirLightSMBias = 0.01f;
     int m_DirLightSMSampleCount = 16;
     float m_DirLightSMSpread = 0.0005;
@@ -269,8 +268,6 @@ private:
     void initDefaultMaterial();
 
     void sendMatrixInformation(const mat4 &mvMatrix, const mat4 &mvpMatrix, const mat4 &normalMatrix) const;
-
-    std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
     // Fonction pour les differentes partie de l'animations //
 
