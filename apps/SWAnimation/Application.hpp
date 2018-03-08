@@ -129,7 +129,7 @@ private:
     glm::vec3 m_RotationAWing2 = vec3(-33.8f,-40.8f,-21.4f);
     glm::vec3 m_ScaleAWing2 = vec3(4,4,4);
 
-    glm::vec3 m_coordAWing3 = vec3(40,70,-20); // Droite
+    glm::vec3 m_coordAWing3 = vec3(40,80,-20); // Droite
     glm::vec3 m_RotationAWing3 = vec3(-33.8f,-40.8f,-21.4f);
     glm::vec3 m_ScaleAWing3 = vec3(4,4,4);
 

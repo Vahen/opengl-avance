@@ -27,11 +27,11 @@ namespace glmlv {
         }
 
         if (glfwGetKey(m_pWindow, GLFW_KEY_Q)) {
-            lateralAngleDelta += 0.001f;
+            lateralAngleDelta += 0.005f;
         }
 
         if (glfwGetKey(m_pWindow, GLFW_KEY_E)) {
-            lateralAngleDelta -= 0.001f;
+            lateralAngleDelta -= 0.005f;
         }
 
         if (glfwGetKey(m_pWindow, GLFW_KEY_S)) {
@@ -67,7 +67,7 @@ namespace glmlv {
 
         if (lateralAngleDelta) {
             newRcpViewMatrix = rotate(newRcpViewMatrix, lateralAngleDelta, vec3(0, 0, 1));
-
+            m_Orientation +=vec3(0,0,lateralAngleDelta);
             hasMoved = true;
         }
 
@@ -81,11 +81,13 @@ namespace glmlv {
             if (delta.x || delta.y) {
                 newRcpViewMatrix = rotate(newRcpViewMatrix, -0.01f * float(delta.x), vec3(0, 1, 0));
                 newRcpViewMatrix = rotate(newRcpViewMatrix, -0.01f * float(delta.y), vec3(1, 0, 0));
+                m_Orientation +=vec3(0,-0.01f * float(delta.x),0);
+                m_Orientation +=vec3(-0.01f * float(delta.y),0,0);
 
                 hasMoved = true;
             }
         }
-
+        doNotGoOverFullOrientation();
         frontVector = -vec3(newRcpViewMatrix[2]);
         leftVector = -vec3(newRcpViewMatrix[0]);
         upVector = cross(frontVector, leftVector);

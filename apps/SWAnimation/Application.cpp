@@ -52,6 +52,9 @@ int Application::run() {
         if (start) {
             updateShipMovements();
             m_viewController.translateFront(moveFrontTest * m_speed);
+//            m_viewController.rotateOnSelf(5.f);
+//            m_viewController.rotateLeft(5.f);
+//            m_viewController.rotateUp(5.f);
             // todo Bouger la camera en fonction des deplacement des vaisseau
         }
 
@@ -167,7 +170,9 @@ void Application::GUIDisplay(float *clearColor) {
     ImGui::InputFloat("RotationSpeed", &m_RotationSpeed);
     ImGui::InputFloat("Front test", &moveFrontTest);
     auto cameraPos = m_viewController.getM_position();
+    auto cameraOrient = m_viewController.getM_Orientation();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
+    ImGui::InputFloat3("Orientation camera", value_ptr(cameraOrient));
 
 //    ImGui::InputFloat3("PositionAWing1", value_ptr(m_coordAWing1));
 //    ImGui::DragFloat("AngleX", &m_angleTestX, 0.1f, -360.f, 360.f);
@@ -847,7 +852,7 @@ void Application::updateShipMovements() {
     }
 
     auto firstPart = time < 8. && time > 0;
-    auto secondPart = time < 16. && time > 8;
+    auto secondPart = time < 20. && time > 8;
 //    auto thirdPart = time < 30. && time > 20;
 //    auto fourthPart = time < 40. && time > 30;
 //    auto fifthPart = time < 50. && time > 40;
@@ -870,13 +875,13 @@ void Application::updateShipMovements() {
 //        m_RotationBigShip.x += 0.01f;
 //        m_RotationBigShip.y += 0.01f;
 //        m_RotationBigShip.z += 0.01f;
-        m_coordAWing1 += vec3(-2, -1, 1) * m_speed*speedBoostFighter;
+        m_coordAWing1 += vec3(-2, -1.3, 2) * m_speed*speedBoostFighter;
         m_RotationAWing1 += vec3() * m_RotationSpeed;
 
         m_coordAWing2 += vec3(-2,0.5,0) * m_speed*speedBoostFighter;
         m_RotationAWing2 += vec3() * m_RotationSpeed;
 
-        m_coordAWing3 += vec3(-2, -1.3, -1) * m_speed*speedBoostFighter;
+        m_coordAWing3 += vec3(-2, -1.3, -2) * m_speed*speedBoostFighter;
         m_RotationAWing3 += vec3() * m_RotationSpeed;
     }
     if (secondPart) {
@@ -884,13 +889,13 @@ void Application::updateShipMovements() {
 //        m_RotationBigShip.x += 0.01f;
 //        m_RotationBigShip.y += 0.01f;
 //        m_RotationBigShip.z += 0.01f;
-        m_coordAWing1 += vec3(-2, 0.5, -1) * m_speed*speedBoostFighter;
+        m_coordAWing1 += vec3(-2, 0.85, -2) * m_speed*speedBoostFighter;
         m_RotationAWing1 += vec3() * m_RotationSpeed;
 
         m_coordAWing2 += vec3(-2,-0.8,0) * m_speed*speedBoostFighter;
         m_RotationAWing2 += vec3() * m_RotationSpeed;
 
-        m_coordAWing3 += vec3(-2, 0.5, 1) * m_speed*speedBoostFighter;
+        m_coordAWing3 += vec3(-2, 0.9, 2) * m_speed*speedBoostFighter;
         m_RotationAWing3 += vec3() * m_RotationSpeed;
     }
 
