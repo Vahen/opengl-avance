@@ -24,7 +24,7 @@ using namespace std;
 int Application::run() {
 
     bool start = false;
-    float clearColor[3] = {0.45, 0.8, 0.45};
+    float clearColor[3] = {0.45, 0.45, 0.8};
     glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
 
     cout << "Press space to star the animation" << endl;
@@ -102,11 +102,12 @@ int Application::run() {
             if (glfwGetKey(m_GLFWHandle.window(), GLFW_KEY_SPACE)) {
                 start = true;
                 startTime = Clock::now();
+//                startTime = glfwGetTime();
             }
         }
-        auto now = Clock::now();
-        auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
-        auto time = timeElapsed.count();
+//        auto now = Clock::now();
+//        auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
+//        auto time = timeElapsed.count();
 //        if (glm::round(glm::mod(time, 2.)) == 0) {
 //            m_directionalSMResolutionDirty = true;
 //            m_directionalSMDirty = true;
@@ -835,6 +836,8 @@ void Application::updateShipMovements() {
     auto now = Clock::now();
     auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
     auto time = timeElapsed.count();
+//    auto time = glfwGetTime() - startTime;
+//    cout << time << endl;
     auto part1 = time < 5. && time > 0;
     auto part2 = time < 8. && time > 5;
     auto part3 = time < 11. && time > 8;
@@ -873,7 +876,7 @@ void Application::updateShipMovements() {
         m_RotationAWing3.x += -3.f * m_RotationSpeed;
 
         m_viewController.rotateLeft(0.7f);
-        m_viewController.translateUp(-0.15f);
+        m_viewController.translateUp(-0.2f);
         m_viewController.translateFront(0.2f);
     } else if (part2) {
         m_coordAWing1 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
@@ -883,7 +886,7 @@ void Application::updateShipMovements() {
         m_RotationAWing2.z += -6.f * m_RotationSpeed;
         m_RotationAWing3.z += -6.f * m_RotationSpeed;
 
-        m_viewController.translateFront(0.2f);
+        m_viewController.translateFront(0.3f);
         m_viewController.rotateLeft(-0.1f);
     } else if (part3) {
 //        cout << "------ Part 3 -----" << endl;
@@ -896,7 +899,7 @@ void Application::updateShipMovements() {
         m_RotationAWing3.x += -3.f * m_RotationSpeed;
         m_viewController.translateFront(0.25f);
         m_viewController.rotateLeft(-0.5f);
-        m_viewController.translateUp(-0.15f);
+        m_viewController.translateUp(-0.07f);
     } else if (part4) {
         m_coordAWing1 += vec3(0, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 0, -1) * m_speed * speedBoostFighter;
@@ -905,6 +908,9 @@ void Application::updateShipMovements() {
         m_RotationAWing1.z += -2.f * m_RotationSpeed;
         m_RotationAWing2.z += -2.f * m_RotationSpeed;
         m_RotationAWing3.z += -2.f * m_RotationSpeed;
+        m_viewController.rotateLeft(0.1f);
+        m_viewController.translateFront(0.3f);
+
     } else if (part5) {
         m_coordAWing1 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
@@ -916,10 +922,16 @@ void Application::updateShipMovements() {
         m_RotationAWing1.y += 4.f * m_RotationSpeed;
         m_RotationAWing2.y += 4.f * m_RotationSpeed;
         m_RotationAWing3.y += 4.f * m_RotationSpeed;
+        m_viewController.translateLeft(0.05f);
+        m_viewController.rotateLeft(-0.65f);
     } else if (part6) {
         m_coordAWing1 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
+        m_viewController.rotateLeft(-0.1f);
+        m_viewController.translateLeft(-0.1f);
+        m_viewController.translateFront(0.3f);
+
     } else if (part7) {
         m_coordAWing1 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
