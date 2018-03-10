@@ -15,6 +15,7 @@
 #include <glm/gtx/matrix_interpolation.hpp>
 
 #include <chrono>
+#include <thread>
 
 using Clock=std::chrono::system_clock;
 using namespace glmlv;
@@ -30,6 +31,7 @@ int Application::run() {
     cout << "Press space to star the animation" << endl;
 
     m_viewController.setPosition(m_coordAWing1 * m_ScaleAWing1);
+    auto minFrameTime = true;
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount) {
         const auto seconds = glfwGetTime();
@@ -101,7 +103,7 @@ int Application::run() {
         if (!start) {
             if (glfwGetKey(m_GLFWHandle.window(), GLFW_KEY_SPACE)) {
                 start = true;
-                startTime = Clock::now();
+//                startTime = Clock::now();
 //                startTime = glfwGetTime();
             }
         }
@@ -112,6 +114,9 @@ int Application::run() {
 //            m_directionalSMResolutionDirty = true;
 //            m_directionalSMDirty = true;
 //        }
+        if (minFrameTime){
+            std::this_thread::sleep_for(std::chrono::microseconds(850));
+        }
     }
 
     return 0;
@@ -833,6 +838,10 @@ mat4 &Application::applyTransformAWing3(mat4 &mvMatrix) {
 }
 
 void Application::updateShipMovements() {
+    if(firstTime){
+        startTime = Clock::now();
+        firstTime = false;
+    }
     auto now = Clock::now();
     auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
     auto time = timeElapsed.count();
@@ -852,6 +861,8 @@ void Application::updateShipMovements() {
     auto part12 = time < 55. && time > 50.;
     auto part13 = time < 60. && time > 55.;
     auto part14 = time < 65. && time > 60.;
+    auto part15 = time < 70. && time > 65.;
+    auto part16 = time < 75. && time > 70.;
 
     // todo
     vec3 haut = vec3(0, 1, 0); // Vertical +
@@ -931,6 +942,7 @@ void Application::updateShipMovements() {
         m_viewController.rotateLeft(-0.1f);
         m_viewController.translateLeft(-0.1f);
         m_viewController.translateFront(0.3f);
+        m_viewController.rotateOnSelf(-0.1f);
 
     } else if (part7) {
         m_coordAWing1 += vec3(1, 1, -1) * m_speed * speedBoostFighter;
@@ -943,37 +955,67 @@ void Application::updateShipMovements() {
         m_RotationAWing1.y += -1.f * m_RotationSpeed;
         m_RotationAWing2.y += -1.f * m_RotationSpeed;
         m_RotationAWing3.y += -1.f * m_RotationSpeed;
+        m_viewController.rotateOnSelf(0.1f);
+        m_viewController.rotateLeft(0.25f);
+        m_viewController.translateUp(0.3f);
+
     } else if (part8) {
         // faire rotation pour passer de 49 / 12.4 / -121 à 0 / 20 / 0
         m_RotationAWing1 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
         m_RotationAWing2 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
         m_RotationAWing3 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
+        m_viewController.rotateLeft(-0.25f);
+//        m_viewController.translateFront(-0.05f);
     } else if (part9) {
         m_RotationAWing1.y += 1.1f * m_RotationSpeed;
         m_RotationAWing2.y += 1.1f * m_RotationSpeed;
         m_RotationAWing3.y += 1.1f * m_RotationSpeed;
+        m_viewController.rotateLeft(-0.15f);
     } else if (part10) {
         m_coordAWing1 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
+        m_viewController.rotateLeft(-0.15f);
+        m_viewController.translateFront(-0.15f);
     } else if (part11) {
         m_coordAWing1 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
+        m_viewController.rotateLeft(-0.3f);
     } else if (part12) {
 
         m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+        m_viewController.rotateLeft(-0.42f);
+        m_viewController.translateLeft(0.3f);
+        m_viewController.translateFront(0.2f);
     }
-//    else if (part13) {
+    else if (part13) {
+        m_coordAWing1 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
+        m_viewController.rotateLeft(-0.42f);
+        m_viewController.translateFront(0.4f);
+    }
+    else if (part14) {
+        // todo
 //        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
 //        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
 //        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//    }else if (part14) {
+    }
+    else if (part15) {
+        // todo
 //        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
 //        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
 //        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//    }
+    }
+    else if (part16) {
+        // todo
+//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+    }
+
 
 }

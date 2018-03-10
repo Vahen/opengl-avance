@@ -286,4 +286,5 @@ private:
 
 
     float moveFrontTest = 0.0f;
+    bool firstTime = true;
 };
