@@ -114,9 +114,9 @@ int Application::run() {
 //            m_directionalSMResolutionDirty = true;
 //            m_directionalSMDirty = true;
 //        }
-        if (minFrameTime){
-            std::this_thread::sleep_for(std::chrono::microseconds(850));
-        }
+//        if (minFrameTime){
+//            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+//        }
     }
 
     return 0;
@@ -168,7 +168,6 @@ void Application::GUIDisplay(float *clearColor) {
 
     ImGui::InputFloat("MovementSpeed", &m_speed);
     ImGui::InputFloat("RotationSpeed", &m_RotationSpeed);
-    ImGui::InputFloat("Front test", &moveFrontTest);
     auto cameraPos = m_viewController.getM_position();
     auto cameraOrient = m_viewController.getM_Orientation();
     ImGui::InputFloat3("Position camera", value_ptr(cameraPos));
@@ -838,43 +837,67 @@ mat4 &Application::applyTransformAWing3(mat4 &mvMatrix) {
 }
 
 void Application::updateShipMovements() {
-    if(firstTime){
-        startTime = Clock::now();
-        firstTime = false;
-    }
-    auto now = Clock::now();
-    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
-    auto time = timeElapsed.count();
+//    if(firstTime){
+//        startTime = Clock::now();
+//        firstTime = false;
+//    }
+//    auto now = Clock::now();
+//    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
+//    auto time = timeElapsed.count();
 //    auto time = glfwGetTime() - startTime;
 //    cout << time << endl;
-    auto part1 = time < 5. && time > 0;
-    auto part2 = time < 8. && time > 5;
-    auto part3 = time < 11. && time > 8;
-    auto part4 = time < 14. && time > 11.;
-    auto part5 = time < 18. && time > 14.;
-    auto part6 = time < 25. && time > 18.;
-    auto part7 = time < 30. && time > 25.;
-    auto part8 = time < 35. && time > 30.;
-    auto part9 = time < 40. && time > 35.;
-    auto part10 = time < 45. && time > 40.;
-    auto part11 = time < 50. && time > 45.;
-    auto part12 = time < 55. && time > 50.;
-    auto part13 = time < 60. && time > 55.;
-    auto part14 = time < 65. && time > 60.;
-    auto part15 = time < 70. && time > 65.;
-    auto part16 = time < 75. && time > 70.;
+//    auto part1 = time < 5. && time > 0;
+//    auto part2 = time < 8. && time > 5;
+//    auto part3 = time < 11. && time > 8;
+//    auto part4 = time < 14. && time > 11.;
+//    auto part5 = time < 18. && time > 14.;
+//    auto part6 = time < 25. && time > 18.;
+//    auto part7 = time < 30. && time > 25.;
+//    auto part8 = time < 35. && time > 30.;
+//    auto part9 = time < 40. && time > 35.;
+//    auto part10 = time < 45. && time > 40.;
+//    auto part11 = time < 50. && time > 45.;
+//    auto part12 = time < 55. && time > 50.;
+//    auto part13 = time < 60. && time > 55.;
+//    auto part14 = time < 65. && time > 60.;
+//    auto part15 = time < 70. && time > 65.;
+//    auto part16 = time < 75. && time > 70.;
+
+    // 1s = 400
+    m_iter++;
+    auto part1 = m_iter < 2000; // 5s
+    auto part2 = m_iter > 2000 && m_iter < 3200;
+    auto part3 = m_iter > 3200 && m_iter < 4400;
+    auto part4 = m_iter > 4400 && m_iter < 5600;
+    auto part5 = m_iter > 5600 && m_iter < 7200;
+    auto part6 = m_iter > 7200 && m_iter < 10000;
+    auto part7 = m_iter > 10000 && m_iter < 12000;
+    auto part8 = m_iter > 12000 && m_iter < 14000;
+    auto part9 = m_iter > 14000 && m_iter < 16000;
+    auto part10 = m_iter > 16000 && m_iter < 18000;
+    auto part11 = m_iter > 18000 && m_iter < 20000;
+    auto part12 = m_iter > 20000 && m_iter < 22000;
+    auto part13 = m_iter > 22000 && m_iter < 24000;
+    auto part14 = m_iter > 24000 && m_iter < 26000;
+    auto part15 = m_iter > 26000 && m_iter < 28000;
+    auto part16 = m_iter > 28000 && m_iter < 30000;
 
     // todo
-    vec3 haut = vec3(0, 1, 0); // Vertical +
-    vec3 bas = vec3(0, -1, 0); // Vertical -
-
-    vec3 avant = vec3(-1, 0, 0); // Avant
-    vec3 arriere = vec3(1, 0, 0); // Arriere
-
-    vec3 droite = vec3(0, 0, 1); // droite
-    vec3 gauche = vec3(0, 0, -1); // gauche
+//    vec3 haut = vec3(0, 1, 0); // Vertical +
+//    vec3 bas = vec3(0, -1, 0); // Vertical -
+//
+//    vec3 avant = vec3(-1, 0, 0); // Avant
+//    vec3 arriere = vec3(1, 0, 0); // Arriere
+//
+//    vec3 droite = vec3(0, 0, 1); // droite
+//    vec3 gauche = vec3(0, 0, -1); // gauche
 
     float speedBoostFighter = 2.f;
+
+//    if(time < 1. && time > 0){
+//        cout << m_iter << endl;
+//    }
+
     // todo -> Modif les deplacement pour nouvelles scene
     // Modif des vecteurs de translation et rotation
     if (part1) {
@@ -923,6 +946,7 @@ void Application::updateShipMovements() {
         m_viewController.translateFront(0.3f);
 
     } else if (part5) {
+
         m_coordAWing1 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
@@ -936,6 +960,7 @@ void Application::updateShipMovements() {
         m_viewController.translateLeft(0.05f);
         m_viewController.rotateLeft(-0.65f);
     } else if (part6) {
+//        cout << "2 iter = "<< m_iter << endl;
         m_coordAWing1 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
@@ -988,7 +1013,7 @@ void Application::updateShipMovements() {
         m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
         m_viewController.rotateLeft(-0.42f);
-        m_viewController.translateLeft(0.3f);
+        m_viewController.translateLeft(0.1f);
         m_viewController.translateFront(0.2f);
     }
     else if (part13) {
@@ -1000,9 +1025,11 @@ void Application::updateShipMovements() {
     }
     else if (part14) {
         // todo
-//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+        // Positionner pour partir vers le SD
+        m_RotationAWing1.z += 1.f * m_RotationSpeed;
+        m_RotationAWing2.z += 1.f * m_RotationSpeed;
+        m_RotationAWing3.z += 1.f * m_RotationSpeed;
+        m_viewController.rotateUp(0.1f);
     }
     else if (part15) {
         // todo

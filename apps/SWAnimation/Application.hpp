@@ -284,7 +284,6 @@ private:
 
     void updateShipMovements();
 
-
-    float moveFrontTest = 0.0f;
     bool firstTime = true;
+    int m_iter = 0;
 };
