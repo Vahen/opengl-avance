@@ -174,6 +174,8 @@ void Application::GUIDisplay(float *clearColor) {
     ImGui::InputFloat3("Orientation camera", value_ptr(cameraOrient));
 
     ImGui::InputFloat3("OrientAWing1", value_ptr(m_RotationAWing1));
+    ImGui::InputFloat3("CoordAWing1", value_ptr(m_coordAWing1));
+    ImGui::InputFloat3("CoordAWing2", value_ptr(m_coordAWing2));
     ImGui::InputFloat3("OrientAWing2", value_ptr(m_RotationAWing2));
     ImGui::InputFloat3("OrientAWing3", value_ptr(m_RotationAWing3));
     ImGui::End();
@@ -881,6 +883,8 @@ void Application::updateShipMovements() {
     auto part14 = m_iter > 24000 && m_iter < 26000;
     auto part15 = m_iter > 26000 && m_iter < 28000;
     auto part16 = m_iter > 28000 && m_iter < 30000;
+    auto part17 = m_iter > 30000 && m_iter < 32000;
+    auto part18 = m_iter > 32000 && m_iter < 34000;
 
     // todo
 //    vec3 haut = vec3(0, 1, 0); // Vertical +
@@ -1015,33 +1019,50 @@ void Application::updateShipMovements() {
         m_viewController.rotateLeft(-0.42f);
         m_viewController.translateLeft(0.1f);
         m_viewController.translateFront(0.2f);
-    }
-    else if (part13) {
+    } else if (part13) {
         m_coordAWing1 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_viewController.rotateLeft(-0.42f);
         m_viewController.translateFront(0.4f);
-    }
-    else if (part14) {
+    } else if (part14) {
         // todo
         // Positionner pour partir vers le SD
-        m_RotationAWing1.z += 1.f * m_RotationSpeed;
-        m_RotationAWing2.z += 1.f * m_RotationSpeed;
-        m_RotationAWing3.z += 1.f * m_RotationSpeed;
+
+        // -19 29 16
+        // vers
+        // 30 200 10
+        m_RotationAWing1 += vec3(2.5, 8.5, -0.3) * m_RotationSpeed;
+        m_RotationAWing2 += vec3(2.5, 8.5, -0.3) * m_RotationSpeed;
+        m_RotationAWing3 += vec3(2.5, 8.5, -0.3) * m_RotationSpeed;
         m_viewController.rotateUp(0.1f);
-    }
-    else if (part15) {
+    } else if (part15) {
         // todo
-//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-    }
-    else if (part16) {
+        m_coordAWing1 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
+    } else if (part16) {
         // todo
-//        m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing2 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
-//        m_coordAWing3 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
+        m_RotationAWing1 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
+        m_RotationAWing2 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
+        m_RotationAWing3 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
+        m_viewController.rotateLeft(1.7f);
+
+
+    } else if (part17) {
+        // todo
+//        m_viewController.rotateLeft(2.f);
+        m_viewController.rotateUp(0.5f);
+        m_viewController.translateFront(-0.1f);
+        m_coordAWing1 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+    }
+    else if(part18){
+        m_viewController.translateFront(0.1f);
+        m_coordAWing1 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
     }
 
 
