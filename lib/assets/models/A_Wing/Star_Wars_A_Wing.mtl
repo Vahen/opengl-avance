@@ -1,229 +1,229 @@
 newmtl BlackInodizedAl0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 3.47873
 Ks 1 1 1
 Kd 0.198039 0.198039 0.198039
 map_Kd BlackInodizedAl0.jpg
 map_Bump BlackInodizedAl1.jpg
 newmtl BLUE_GLASS
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 5.36556
 Ks 0.745098 0.741176 0.721569
 Kd 0.211765 0.341177 0.360784
 map_Kd BLUE_GLASS.jpg
 map_Bump BLUE_GLASS_b.jpg
 newmtl White_porcelai0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai0.jpg
 map_Bump White_porcelai1.jpg
 newmtl Flat_gray0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.501961 0.501961 0.501961
 map_Kd Flat_gray0.jpg
 map_Bump Flat_gray_b0.jpg
 newmtl Flat_white0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 1 1 1
 map_Kd Flat_white0.jpg
 map_Bump Flat_white_b0.jpg
 newmtl ENGINE0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 1
 Ks 0 0 0
 Kd 0.988235 0.862745 0.690196
 map_Kd ENGINE0.jpg
 map_Bump ENGINE_b0.jpg
 newmtl BlackInodizedAl1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 3.47873
 Ks 1 1 1
 Kd 0.198039 0.198039 0.198039
 map_Kd BlackInodizedAl2.jpg
 map_Bump BlackInodizedAl3.jpg
 newmtl White_porcelai1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai2.jpg
 map_Bump White_porcelai3.jpg
 newmtl White_porcelai2
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai4.jpg
 map_Bump White_porcelai5.jpg
 newmtl White_porcelai3
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai6.jpg
 map_Bump White_porcelai7.jpg
 newmtl Flat_gray1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.501961 0.501961 0.501961
 map_Kd Flat_gray1.jpg
 map_Bump Flat_gray_b1.jpg
 newmtl White_porcelai4
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai8.jpg
 map_Bump White_porcelai9.jpg
 newmtl REBEL_RED_II0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 1.43333
 Ks 1 0.301961 0.352941
 Kd 0.34902 0 0.00784326
 map_Kd REBEL_RED_II0.jpg
 map_Bump REBEL_RED_II_b0.jpg
 newmtl Pottery_clay0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 2.31637
 Ks 0.129412 0.129412 0.129412
 Kd 0.027451 0.027451 0.027451
 map_Kd Pottery_clay0.jpg
 map_Bump Pottery_clay_b0.jpg
 newmtl Flat_white1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 1 1 1
 map_Kd Flat_white1.jpg
 map_Bump Flat_white_b1.jpg
 newmtl ENGINE1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 1
 Ks 0 0 0
 Kd 0.988235 0.862745 0.690196
 map_Kd ENGINE1.jpg
 map_Bump ENGINE_b1.jpg
 newmtl White_porcelai5
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai10.jpg
 map_Bump White_porcelai11.jpg
 newmtl REBEL_RED_II1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 1.43333
 Ks 1 0.301961 0.352941
 Kd 0.34902 0 0.00784326
 map_Kd REBEL_RED_II1.jpg
 map_Bump REBEL_RED_II_b1.jpg
 newmtl Pottery_clay1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 2.31637
 Ks 0.129412 0.129412 0.129412
 Kd 0.027451 0.027451 0.027451
 map_Kd Pottery_clay1.jpg
 map_Bump Pottery_clay_b1.jpg
 newmtl BlackInodizedAl2
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 3.47873
 Ks 1 1 1
 Kd 0.198039 0.198039 0.198039
 map_Kd BlackInodizedAl4.jpg
 map_Bump BlackInodizedAl5.jpg
 newmtl White_porcelai6
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai12.jpg
 map_Bump White_porcelai13.jpg
 newmtl White_porcelai7
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai14.jpg
 map_Bump White_porcelai15.jpg
 newmtl White_porcelai8
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai16.jpg
 map_Bump White_porcelai17.jpg
 newmtl Flat_gray2
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.501961 0.501961 0.501961
 map_Kd Flat_gray2.jpg
 map_Bump Flat_gray_b2.jpg
 newmtl BlackInodizedAl3
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 3.47873
 Ks 1 1 1
 Kd 0.198039 0.198039 0.198039
 map_Kd BlackInodizedAl6.jpg
 map_Bump BlackInodizedAl7.jpg
 newmtl White_porcelai9
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai18.jpg
 map_Bump White_porcelai19.jpg
 newmtl White_porcelai10
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai20.jpg
 map_Bump White_porcelai21.jpg
 newmtl White_porcelai11
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 164.022
 Ks 1 1 1
 Kd 0.862745 0.866667 0.905882
 map_Kd White_porcelai22.jpg
 map_Bump White_porcelai23.jpg
 newmtl GREY_DARK
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 2.6117
 Ks 0.529412 0.529412 0.529412
 Kd 0.235294 0.235294 0.235294
 map_Kd GREY_DARK.jpg
 map_Bump GREY_DARK_b.jpg
 newmtl REBEL_RED_II2
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 1.43333
 Ks 1 0.301961 0.352941
 Kd 0.34902 0 0.00784326
 map_Kd REBEL_RED_II2.jpg
 map_Bump REBEL_RED_II_b2.jpg
 newmtl Flat_gray3
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.501961 0.501961 0.501961
 map_Kd Flat_gray3.jpg
 map_Bump Flat_gray_b3.jpg
 newmtl Fire0
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.996684 0.71775 0.289407
 map_Kd Fire0.jpg
 map_Bump Fire_b0.jpg
 newmtl Fire1
-Ka 0 0 0
+Ka 0.05 0.05 0.05
 Ns 8.16617
 Ks 1 1 1
 Kd 0.996684 0.71775 0.289407

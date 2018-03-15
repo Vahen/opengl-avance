@@ -1059,10 +1059,10 @@ void Application::updateShipMovements() {
         m_coordAWing3 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
     }
     else if(part18){
-        m_viewController.translateFront(0.1f);
-        m_coordAWing1 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
-        m_coordAWing2 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
-        m_coordAWing3 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
+        m_viewController.translateFront(0.15f);
+        m_coordAWing1 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
+        m_coordAWing2 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
+        m_coordAWing3 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
     }
 
 
