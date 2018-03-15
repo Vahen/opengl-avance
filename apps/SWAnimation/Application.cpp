@@ -839,32 +839,6 @@ mat4 &Application::applyTransformAWing3(mat4 &mvMatrix) {
 }
 
 void Application::updateShipMovements() {
-//    if(firstTime){
-//        startTime = Clock::now();
-//        firstTime = false;
-//    }
-//    auto now = Clock::now();
-//    auto timeElapsed = chrono::duration_cast<chrono::duration<double>>(now - startTime);
-//    auto time = timeElapsed.count();
-//    auto time = glfwGetTime() - startTime;
-//    cout << time << endl;
-//    auto part1 = time < 5. && time > 0;
-//    auto part2 = time < 8. && time > 5;
-//    auto part3 = time < 11. && time > 8;
-//    auto part4 = time < 14. && time > 11.;
-//    auto part5 = time < 18. && time > 14.;
-//    auto part6 = time < 25. && time > 18.;
-//    auto part7 = time < 30. && time > 25.;
-//    auto part8 = time < 35. && time > 30.;
-//    auto part9 = time < 40. && time > 35.;
-//    auto part10 = time < 45. && time > 40.;
-//    auto part11 = time < 50. && time > 45.;
-//    auto part12 = time < 55. && time > 50.;
-//    auto part13 = time < 60. && time > 55.;
-//    auto part14 = time < 65. && time > 60.;
-//    auto part15 = time < 70. && time > 65.;
-//    auto part16 = time < 75. && time > 70.;
-
     // 1s = 400
     m_iter++;
     auto part1 = m_iter < 2000; // 5s
@@ -886,23 +860,8 @@ void Application::updateShipMovements() {
     auto part17 = m_iter > 30000 && m_iter < 32000;
     auto part18 = m_iter > 32000 && m_iter < 34000;
 
-    // todo
-//    vec3 haut = vec3(0, 1, 0); // Vertical +
-//    vec3 bas = vec3(0, -1, 0); // Vertical -
-//
-//    vec3 avant = vec3(-1, 0, 0); // Avant
-//    vec3 arriere = vec3(1, 0, 0); // Arriere
-//
-//    vec3 droite = vec3(0, 0, 1); // droite
-//    vec3 gauche = vec3(0, 0, -1); // gauche
-
     float speedBoostFighter = 2.f;
 
-//    if(time < 1. && time > 0){
-//        cout << m_iter << endl;
-//    }
-
-    // todo -> Modif les deplacement pour nouvelles scene
     // Modif des vecteurs de translation et rotation
     if (part1) {
         m_coordAWing1 += vec3(-2, -1.3, 0) * m_speed * speedBoostFighter;
@@ -927,7 +886,6 @@ void Application::updateShipMovements() {
         m_viewController.translateFront(0.3f);
         m_viewController.rotateLeft(-0.1f);
     } else if (part3) {
-//        cout << "------ Part 3 -----" << endl;
         m_coordAWing1 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-1, 0, -1) * m_speed * speedBoostFighter;
@@ -950,7 +908,6 @@ void Application::updateShipMovements() {
         m_viewController.translateFront(0.3f);
 
     } else if (part5) {
-
         m_coordAWing1 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(0, 0, -0.5) * m_speed * speedBoostFighter;
@@ -963,8 +920,8 @@ void Application::updateShipMovements() {
         m_RotationAWing3.y += 4.f * m_RotationSpeed;
         m_viewController.translateLeft(0.05f);
         m_viewController.rotateLeft(-0.65f);
+
     } else if (part6) {
-//        cout << "2 iter = "<< m_iter << endl;
         m_coordAWing1 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(1, 0, -1) * m_speed * speedBoostFighter;
@@ -994,23 +951,26 @@ void Application::updateShipMovements() {
         m_RotationAWing2 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
         m_RotationAWing3 += vec3(-4.5, 0.2, 7.5) * m_RotationSpeed;
         m_viewController.rotateLeft(-0.25f);
-//        m_viewController.translateFront(-0.05f);
+
     } else if (part9) {
         m_RotationAWing1.y += 1.1f * m_RotationSpeed;
         m_RotationAWing2.y += 1.1f * m_RotationSpeed;
         m_RotationAWing3.y += 1.1f * m_RotationSpeed;
         m_viewController.rotateLeft(-0.15f);
+
     } else if (part10) {
         m_coordAWing1 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
         m_viewController.rotateLeft(-0.15f);
         m_viewController.translateFront(-0.15f);
+
     } else if (part11) {
         m_coordAWing1 += vec3(-0.1, -0.5, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0.5, 1) * m_speed * speedBoostFighter;
         m_viewController.rotateLeft(-0.3f);
+
     } else if (part12) {
 
         m_coordAWing1 += vec3(-0.1, 0, 2) * m_speed * speedBoostFighter;
@@ -1019,16 +979,15 @@ void Application::updateShipMovements() {
         m_viewController.rotateLeft(-0.42f);
         m_viewController.translateLeft(0.1f);
         m_viewController.translateFront(0.2f);
+
     } else if (part13) {
         m_coordAWing1 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(-0.1, 0, 1) * m_speed * speedBoostFighter;
         m_viewController.rotateLeft(-0.42f);
         m_viewController.translateFront(0.4f);
-    } else if (part14) {
-        // todo
-        // Positionner pour partir vers le SD
 
+    } else if (part14) {
         // -19 29 16
         // vers
         // 30 200 10
@@ -1036,33 +995,31 @@ void Application::updateShipMovements() {
         m_RotationAWing2 += vec3(2.5, 8.5, -0.3) * m_RotationSpeed;
         m_RotationAWing3 += vec3(2.5, 8.5, -0.3) * m_RotationSpeed;
         m_viewController.rotateUp(0.1f);
+
     } else if (part15) {
-        // todo
         m_coordAWing1 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(0.5, 0, -1) * m_speed * speedBoostFighter;
+
     } else if (part16) {
-        // todo
         m_RotationAWing1 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
         m_RotationAWing2 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
         m_RotationAWing3 += vec3(1.f, 1.5, 0) * m_RotationSpeed;
         m_viewController.rotateLeft(1.7f);
 
-
     } else if (part17) {
-        // todo
-//        m_viewController.rotateLeft(2.f);
         m_viewController.rotateUp(0.5f);
         m_viewController.translateFront(-0.1f);
         m_coordAWing1 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(0, 1, -1) * m_speed * speedBoostFighter;
-    }
-    else if(part18){
+
+    } else if (part18) {
         m_viewController.translateFront(0.15f);
         m_coordAWing1 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
         m_coordAWing2 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
         m_coordAWing3 += vec3(0, 0.7, -1) * m_speed * speedBoostFighter;
+
     }
 
 
