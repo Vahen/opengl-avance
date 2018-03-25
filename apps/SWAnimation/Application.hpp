@@ -11,7 +11,6 @@
 #include <limits>
 #include <chrono>
 #include "Camera.hpp"
-#include "TrackballCamera.hpp"
 
 
 using namespace glmlv;

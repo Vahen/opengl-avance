@@ -28,7 +28,7 @@ int Application::run() {
     float clearColor[3] = {0.45, 0.45, 0.8};
     glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
 
-    cout << "Press space to star the animation" << endl;
+    cout << "Press space to start the animation" << endl;
 
     m_viewController.setPosition(m_coordAWing1 * m_ScaleAWing1);
     auto minFrameTime = true;
