@@ -81,10 +81,10 @@ int Application::run() {
 
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
-
-        {
-            GUIDisplay(clearColor);
-        }
+//
+//        {
+//            GUIDisplay(clearColor);
+//        }
 
 
         ImGui::Render();
@@ -98,7 +98,7 @@ int Application::run() {
         auto ellapsedTime = glfwGetTime() - seconds;
         auto guiHasFocus = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
         if (!guiHasFocus) {
-            m_viewController.update(float(ellapsedTime));
+            //m_viewController.update(float(ellapsedTime));
         }
         if (!start) {
             if (glfwGetKey(m_GLFWHandle.window(), GLFW_KEY_SPACE)) {
