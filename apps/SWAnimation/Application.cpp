@@ -98,6 +98,7 @@ int Application::run() {
         auto ellapsedTime = glfwGetTime() - seconds;
         auto guiHasFocus = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
         if (!guiHasFocus) {
+            //#Camera
             //m_viewController.update(float(ellapsedTime));
         }
         if (!start) {
